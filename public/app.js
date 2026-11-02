@@ -39,6 +39,8 @@ const DOM = {
   wishlistCount: document.getElementById('wishlistCount'),
   btnRefreshStore: document.getElementById('btnRefreshStore'),
   btnDemoToggle: document.getElementById('btnDemoToggle'),
+  btnPushNotify: document.getElementById('btnPushNotify'),
+  pushNotifyText: document.getElementById('pushNotifyText'),
   loadingState: document.getElementById('loadingState'),
   
   // Tabs & Sections
@@ -124,6 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
   bindEvents();
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js').catch(() => {});
+    checkPushSubscriptionStatus();
   }
   checkServerStatus().then(() => {
     if (state.auth) {
@@ -1020,6 +1023,9 @@ function bindEvents() {
     loadStore(state.isDemoMode);
   });
 
+  // Push Notification Toggle Button
+  DOM.btnPushNotify?.addEventListener('click', handlePushNotificationToggle);
+
   // Login Modal
   DOM.btnLoginModal.addEventListener('click', () => {
     if (state.auth) {
@@ -1197,4 +1203,110 @@ function playAudio(el) {
       el.play().catch(() => {});
     }
   } catch (e) {}
+}
+
+// ================= WEB PUSH NOTIFICATIONS (IPHONE / ANDROID / DESKTOP) =================
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+
+async function checkPushSubscriptionStatus() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    return;
+  }
+
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.getSubscription();
+    if (sub && Notification.permission === 'granted') {
+      DOM.btnPushNotify.classList.add('subscribed');
+      DOM.pushNotifyText.textContent = 'Đã bật thông báo 7h';
+      DOM.btnPushNotify.title = 'Thông báo đang hoạt động lúc 07:00 sáng mỗi ngày!';
+    }
+  } catch (e) {
+    console.warn('[Push] Error checking subscription:', e);
+  }
+}
+
+async function handlePushNotificationToggle() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    alert('Trình duyệt hoặc thiết bị này không hỗ trợ Web Push Notifications.');
+    return;
+  }
+
+  // iOS Safari check: If on iPhone/iPad and not added to Home Screen yet
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  const isStandalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+
+  if (isIOS && !isStandalone) {
+    alert('📱 Trên iPhone, bạn cần bấm nút Chia sẻ (Share) -> chọn "Thêm vào Màn hình chính" trước, sau đó mở app từ màn hình chính để bật thông báo đẩy 07:00 sáng!');
+    return;
+  }
+
+  try {
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') {
+      alert('Bạn đã từ chối cấp quyền thông báo. Vui lòng cho phép quyền thông báo trong Cài đặt iPhone/Trình duyệt để nhận tin lúc 07:00 sáng.');
+      return;
+    }
+
+    DOM.pushNotifyText.textContent = 'Đang kích hoạt...';
+
+    // 1. Fetch public key
+    const keyRes = await fetch('/api/push/public-key');
+    const keyData = await keyRes.json();
+    if (!keyData.publicKey) {
+      throw new Error('Không thể lấy VAPID Public Key từ máy chủ.');
+    }
+
+    // 2. Subscribe via Service Worker
+    const reg = await navigator.serviceWorker.ready;
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) {
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(keyData.publicKey)
+      });
+    }
+
+    // 3. Save subscription on server
+    const saveRes = await fetch('/api/push/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        subscription: sub,
+        auth: state.auth,
+        wishlist: Array.from(state.wishlist)
+      })
+    });
+    const saveData = await saveRes.json();
+
+    if (!saveData.success) {
+      throw new Error(saveData.message || 'Lỗi lưu thông tin thiết bị.');
+    }
+
+    DOM.btnPushNotify.classList.add('subscribed');
+    DOM.pushNotifyText.textContent = 'Đã bật thông báo 7h';
+    DOM.btnPushNotify.title = 'Thông báo đang hoạt động lúc 07:00 sáng mỗi ngày!';
+
+    // 4. Send test push notification
+    await fetch('/api/push/test', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ subscription: sub })
+    });
+
+    alert('🎉 ĐÃ BẬT THÔNG BÁO ĐẨY 07:00 SÁNG THÀNH CÔNG!\n\nMột thông báo thử nghiệm vừa được gửi đến màn hình khóa thiết bị của bạn. Mỗi ngày đúng 7:00 sáng khi shop Valorant reset, hệ thống sẽ tự động gửi thông báo danh sách vũ khí!');
+  } catch (err) {
+    console.error('[Push error]:', err);
+    alert('Không thể kích hoạt thông báo: ' + err.message);
+    DOM.pushNotifyText.textContent = 'Thông báo 7h sáng';
+  }
 }

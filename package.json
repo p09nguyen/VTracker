@@ -10,6 +10,8 @@
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.21.2",
-    "qrcode": "^1.5.4"
+    "node-cron": "^4.6.0",
+    "qrcode": "^1.5.4",
+    "web-push": "^3.6.7"
   }
 }

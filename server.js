@@ -10,6 +10,7 @@ const QRCode = require('qrcode');
 const skinCache = require('./services/skinCache');
 const riotAuth = require('./services/riotAuth');
 const storeService = require('./services/storeService');
+const notificationService = require('./services/notificationService');
 
 const app = express();
 const PORT = process.env.PORT || 3888;
@@ -219,6 +220,43 @@ app.get('/api/skins/search', (req, res) => {
  */
 app.get('/api/skins/all', (req, res) => {
   res.json({ total: skinCache.searchList.length, skins: skinCache.searchList });
+});
+
+/**
+ * Web Push Notification Endpoints (iPhone / Android / Desktop)
+ */
+app.get('/api/push/public-key', (req, res) => {
+  res.json({ publicKey: notificationService.publicKey });
+});
+
+app.post('/api/push/subscribe', (req, res) => {
+  const { subscription, auth, wishlist } = req.body;
+  if (!subscription) {
+    return res.json({ success: false, message: 'Thiếu thông tin đăng ký subscription.' });
+  }
+  const result = notificationService.addSubscription(subscription, auth || currentActiveSession, wishlist);
+  res.json(result);
+});
+
+app.post('/api/push/test', async (req, res) => {
+  try {
+    const { subscription } = req.body;
+    if (!subscription) {
+      return res.json({ success: false, message: 'Thiếu thông tin subscription để test.' });
+    }
+    await notificationService.sendTestPush(subscription);
+    res.json({ success: true });
+  } catch (err) {
+    res.json({ success: false, message: err.message });
+  }
+});
+
+/**
+ * Store Summary API (Ideal for Apple Shortcuts / Siri on iOS)
+ */
+app.get('/api/store/summary', async (req, res) => {
+  const summary = await notificationService.getSummaryText(currentActiveSession);
+  res.json(summary);
 });
 
 // Start Server & Initialize Skin Cache

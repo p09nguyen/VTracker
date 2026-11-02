@@ -1989,6 +1989,34 @@ body {
 }
 
 /* ================= IPHONE & MOBILE MODAL ================= */
+.btn-push-notify {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: var(--kc-gold);
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-heading);
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-push-notify:hover {
+  background: rgba(245, 158, 11, 0.22);
+  border-color: var(--kc-gold);
+  box-shadow: 0 0 15px var(--kc-gold-glow);
+}
+
+.btn-push-notify.subscribed {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: #10b981;
+  color: #10b981;
+}
+
 .btn-mobile-pill {
   display: inline-flex;
   align-items: center;
