@@ -1,0 +1,23 @@
+{
+  "name": "VTracker - Valorant Store",
+  "short_name": "VTracker",
+  "description": "Theo dõi cửa hàng Valorant hằng ngày & Chợ Đêm",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0e14",
+  "theme_color": "#ff4655",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
