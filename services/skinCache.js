@@ -11,6 +11,7 @@ class SkinCache {
     this.tiers = new Map();
     this.bundles = new Map();
     this.accessories = new Map();
+    this.competitiveTiers = new Map();
     this.searchList = [];
     this.isReady = false;
     this.lastUpdated = null;
@@ -22,6 +23,7 @@ class SkinCache {
       await this.fetchVersion();
       await Promise.all([
         this.fetchTiers(),
+        this.fetchCompetitiveTiers(),
         this.fetchSkins(),
         this.fetchBundles(),
         this.fetchAccessories()
@@ -29,7 +31,7 @@ class SkinCache {
       this.buildSearchIndex();
       this.isReady = true;
       this.lastUpdated = new Date();
-      console.log(`[SkinCache] Cache ready! Indexed ${this.skins.size} skins, ${this.skinLevels.size} levels, ${this.accessories.size} accessories.`);
+      console.log(`[SkinCache] Cache ready! Indexed ${this.skins.size} skins, ${this.skinLevels.size} levels, ${this.accessories.size} accessories, ${this.competitiveTiers.size} rank tiers.`);
     } catch (err) {
       console.error('[SkinCache] Failed to initialize cache:', err.message);
     }
@@ -67,6 +69,47 @@ class SkinCache {
     } catch (e) {
       console.error('[SkinCache] Error loading tiers:', e.message);
     }
+  }
+
+  async fetchCompetitiveTiers() {
+    try {
+      const res = await fetch('https://valorant-api.com/v1/competitivetiers');
+      const json = await res.json();
+      if (json.data && Array.isArray(json.data) && json.data.length > 0) {
+        const latest = json.data[json.data.length - 1];
+        if (latest && Array.isArray(latest.tiers)) {
+          for (const t of latest.tiers) {
+            const hex = t.color ? '#' + t.color.slice(0, 6) : '#94a3b8';
+            this.competitiveTiers.set(t.tier, {
+              tier: t.tier,
+              tierName: t.tierName,
+              divisionName: t.divisionName,
+              color: hex,
+              largeIcon: t.largeIcon || 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/0/largeicon.png',
+              smallIcon: t.smallIcon || 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/0/smallicon.png'
+            });
+          }
+          console.log(`[SkinCache] Loaded ${this.competitiveTiers.size} competitive rank tiers.`);
+        }
+      }
+    } catch (e) {
+      console.error('[SkinCache] Error loading competitive tiers:', e.message);
+    }
+  }
+
+  resolveCompetitiveTier(tierNumber) {
+    const num = Number(tierNumber) || 0;
+    if (this.competitiveTiers.has(num)) {
+      return this.competitiveTiers.get(num);
+    }
+    return {
+      tier: num,
+      tierName: num === 0 ? 'UNRANKED' : `TIER ${num}`,
+      divisionName: 'UNRANKED',
+      color: '#94a3b8',
+      largeIcon: 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/0/largeicon.png',
+      smallIcon: 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/0/smallicon.png'
+    };
   }
 
   async fetchSkins() {

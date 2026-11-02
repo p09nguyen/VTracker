@@ -66,6 +66,54 @@ class StoreService {
       console.warn('[StoreService] Could not fetch wallet balances:', e.message);
     }
 
+    // 3. Fetch Player MMR & Rank
+    let rankData = {
+      tier: 0,
+      tierName: 'UNRANKED',
+      rankedRating: 0,
+      largeIcon: 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/0/largeicon.png',
+      color: '#94a3b8'
+    };
+    try {
+      const mmrUrl = `https://pd.${region}.a.pvp.net/mmr/v1/players/${puuid}`;
+      const mmrRes = await fetch(mmrUrl, {
+        method: 'GET',
+        headers: commonHeaders
+      });
+      if (mmrRes.ok) {
+        const mmrJson = await mmrRes.json();
+        let tierNumber = 0;
+        let rr = 0;
+
+        if (mmrJson.LatestCompetitiveUpdate) {
+          tierNumber = mmrJson.LatestCompetitiveUpdate.TierAfterUpdate ?? 0;
+          rr = mmrJson.LatestCompetitiveUpdate.RankedRatingAfterUpdate ?? 0;
+        }
+
+        const compQueue = mmrJson.QueueSkills?.competitive;
+        if (compQueue?.SeasonalInfoBySeasonID) {
+          const seasonEntries = Object.values(compQueue.SeasonalInfoBySeasonID);
+          for (const s of seasonEntries) {
+            if (s.CompetitiveTier && s.CompetitiveTier > 0) {
+              tierNumber = s.CompetitiveTier;
+              rr = s.RankedRating ?? rr;
+            }
+          }
+        }
+
+        const tierInfo = skinCache.resolveCompetitiveTier(tierNumber);
+        rankData = {
+          tier: tierNumber,
+          tierName: tierInfo.tierName,
+          rankedRating: rr,
+          largeIcon: tierInfo.largeIcon,
+          color: tierInfo.color
+        };
+      }
+    } catch (e) {
+      console.warn('[StoreService] Could not fetch MMR:', e.message);
+    }
+
     // Process Components
     const dailyOffers = this.parseDailyOffers(storeData);
     const featuredBundles = this.parseFeaturedBundles(storeData);
@@ -82,6 +130,7 @@ class StoreService {
         region: auth.region || 'ap'
       },
       wallet: balances,
+      rank: rankData,
       dailyOffers,
       featuredBundles,
       nightMarket,
@@ -361,6 +410,13 @@ class StoreService {
         vp: 4250,
         kc: 7800,
         rp: 140
+      },
+      rank: {
+        tier: 19,
+        tierName: 'DIAMOND 2',
+        rankedRating: 74,
+        largeIcon: 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/19/largeicon.png',
+        color: '#ab70e6'
       },
       dailyOffers: {
         items: demoItems,

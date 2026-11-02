@@ -210,50 +210,101 @@ body {
   background: var(--val-red);
 }
 
-/* Store Countdown Card */
-.store-countdown-card {
+/* Player Rank & RR Card */
+.rank-card {
   display: flex;
-  flex-direction: column;
   align-items: center;
+  gap: 14px;
   background: var(--bg-secondary);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
-  padding: 8px 22px;
+  padding: 8px 18px;
   box-shadow: var(--shadow-card);
+  transition: var(--transition);
 }
 
-.countdown-label {
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 2px;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  margin-bottom: 2px;
+.rank-card:hover {
+  border-color: rgba(0, 245, 196, 0.4);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 15px rgba(0, 245, 196, 0.15);
 }
 
-.countdown-digits {
+.rank-icon-wrapper {
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
-  gap: 4px;
-  font-family: var(--font-heading);
-  font-size: 1.6rem;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.rank-tier-icon {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.6));
+  transition: transform 0.3s ease;
+}
+
+.rank-card:hover .rank-tier-icon {
+  transform: scale(1.12);
+}
+
+.rank-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 130px;
+}
+
+.rank-label {
+  font-size: 0.65rem;
   font-weight: 700;
-  color: var(--text-primary);
-  letter-spacing: 1px;
+  letter-spacing: 1.5px;
+  color: var(--text-muted);
+  text-transform: uppercase;
 }
 
-.digit-box {
-  background: var(--bg-tertiary);
-  padding: 2px 8px;
-  border-radius: var(--radius-sm);
-  min-width: 38px;
-  text-align: center;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+.rank-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.digit-sep {
-  color: var(--val-red);
+.rank-tier-name {
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
   font-weight: 800;
+  letter-spacing: 0.8px;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.rank-rr-badge {
+  font-family: var(--font-heading);
+  font-size: 0.82rem;
+  font-weight: 700;
+  background: rgba(0, 245, 196, 0.12);
+  border: 1px solid rgba(0, 245, 196, 0.35);
+  color: var(--rad-cyan);
+  padding: 1px 7px;
+  border-radius: 10px;
+  letter-spacing: 0.5px;
+}
+
+.rank-progress-bar {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 3px;
+}
+
+.rank-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--rad-cyan) 0%, #38bdf8 100%);
+  border-radius: 2px;
+  transition: width 0.5s ease-in-out;
 }
 
 /* Header Right */
@@ -645,7 +696,40 @@ body {
 
 .daily-meta-info {
   display: flex;
+  align-items: center;
   gap: 10px;
+}
+
+/* Compact Countdown Timer (Placed at top-right of Daily Items) */
+.compact-timer-card {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(255, 70, 85, 0.12);
+  border: 1px solid rgba(255, 70, 85, 0.4);
+  padding: 5px 12px;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 0 12px rgba(255, 70, 85, 0.2);
+}
+
+.compact-timer-icon {
+  font-size: 0.95rem;
+}
+
+.compact-timer-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #ff858d;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.compact-timer-digits {
+  font-family: var(--font-heading);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 1px;
 }
 
 .meta-tag {
@@ -2134,16 +2218,19 @@ body {
   .app-header {
     flex-direction: column;
     align-items: stretch;
-    gap: 14px;
+    gap: 12px;
+    padding: 14px 0 10px;
   }
   .header-left, .header-right {
     justify-content: space-between;
     width: 100%;
     flex-wrap: wrap;
+    gap: 10px;
   }
-  .store-countdown-card {
-    order: 3;
+  .rank-card {
+    order: 2;
     width: 100%;
+    justify-content: center;
   }
   .mobile-modal-body {
     grid-template-columns: 1fr;
@@ -2159,28 +2246,204 @@ body {
     padding-bottom: env(safe-area-inset-bottom);
   }
   .app-layout {
-    padding: 0 14px;
+    padding: 0 12px;
+    min-height: auto;
+  }
+  .main-content {
+    padding: 10px 0 28px;
+  }
+  .app-header {
+    gap: 10px;
+    padding: 10px 0 8px;
+  }
+  .brand-logo {
+    width: 36px;
+    height: 36px;
+  }
+  .brand-v {
+    width: 22px;
+    height: 22px;
   }
   .brand-title {
-    font-size: 1.8rem;
+    font-size: 1.6rem;
   }
-  .daily-grid, .my-wishlist-grid, .catalog-grid {
-    grid-template-columns: 1fr;
+  .user-pill {
+    padding: 4px 8px;
+    gap: 8px;
   }
+  .user-avatar {
+    width: 30px;
+    height: 30px;
+    font-size: 0.82rem;
+  }
+  .wallet-bar {
+    padding: 2px 6px;
+    gap: 4px;
+  }
+  .wallet-item {
+    padding: 3px 6px;
+    font-size: 0.78rem;
+  }
+  .rank-card {
+    padding: 6px 14px;
+    gap: 10px;
+    width: 100%;
+  }
+  .rank-icon-wrapper {
+    width: 36px;
+    height: 36px;
+  }
+  .rank-tier-name {
+    font-size: 1rem;
+  }
+  .rank-rr-badge {
+    font-size: 0.75rem;
+    padding: 1px 5px;
+  }
+  .app-nav {
+    margin-top: 10px;
+    padding-bottom: 8px;
+    gap: 8px;
+  }
+  .nav-tabs {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+  }
+  .nav-tab {
+    flex-shrink: 0;
+    padding: 7px 12px;
+    font-size: 0.9rem;
+  }
+  .nav-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    width: 100%;
+  }
+  .btn-push-notify, .btn-icon, .btn-demo-pill {
+    padding: 6px 10px;
+    font-size: 0.8rem;
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+  .section-header {
+    margin-bottom: 12px;
+    gap: 8px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .section-title {
+    font-size: 1.35rem;
+    line-height: 1.15;
+  }
+  .section-subtitle {
+    font-size: 0.8rem;
+    margin-top: 2px;
+    line-height: 1.3;
+  }
+  .daily-meta-info {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+  }
+  .compact-timer-card {
+    padding: 4px 8px;
+    gap: 5px;
+  }
+  .compact-timer-digits {
+    font-size: 0.95rem;
+  }
+  .meta-tag {
+    padding: 4px 8px;
+    font-size: 0.75rem;
+  }
+
+  /* 2 items per row on mobile */
+  .daily-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+  .daily-grid .skin-card {
+    border-radius: var(--radius-md);
+  }
+  .daily-grid .card-header {
+    padding: 8px 8px 4px;
+  }
+  .daily-grid .tier-badge {
+    font-size: 0.62rem;
+    gap: 4px;
+    letter-spacing: 0.5px;
+  }
+  .daily-grid .tier-icon-img {
+    width: 12px;
+    height: 12px;
+  }
+  .daily-grid .btn-card-wishlist {
+    padding: 2px;
+  }
+  .daily-grid .btn-card-wishlist svg {
+    width: 17px;
+    height: 17px;
+  }
+  .daily-grid .card-visual {
+    height: 105px;
+    padding: 6px 8px;
+  }
+  .daily-grid .weapon-img {
+    max-width: 95%;
+    max-height: 90%;
+  }
+  .daily-grid .has-video-badge {
+    font-size: 0.58rem;
+    padding: 2px 5px;
+    bottom: 4px;
+    right: 6px;
+    gap: 3px;
+  }
+  .daily-grid .card-info {
+    padding: 8px 8px 10px;
+    gap: 6px;
+  }
+  .daily-grid .skin-title {
+    font-size: 0.85rem;
+    line-height: 1.2;
+    min-height: 2.4em;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .daily-grid .card-footer {
+    gap: 4px;
+  }
+  .daily-grid .price-display {
+    font-size: 1.05rem;
+    gap: 4px;
+  }
+  .daily-grid .curr-icon.vp-icon {
+    width: 15px;
+    height: 15px;
+  }
+  .daily-grid .btn-inspect {
+    padding: 4px 8px;
+    font-size: 0.78rem;
+  }
+
+  .my-wishlist-grid, .catalog-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
   .nm-card-container {
     height: 350px;
   }
   .bundle-name {
     font-size: 2rem;
-  }
-  .nav-tabs {
-    overflow-x: auto;
-    flex-wrap: nowrap;
-    padding-bottom: 6px;
-    -webkit-overflow-scrolling: touch;
-  }
-  .nav-tab {
-    flex-shrink: 0;
   }
 }
 

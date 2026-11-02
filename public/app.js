@@ -24,6 +24,11 @@ const DOM = {
   cdHours: document.getElementById('cdHours'),
   cdMinutes: document.getElementById('cdMinutes'),
   cdSeconds: document.getElementById('cdSeconds'),
+  rankCard: document.getElementById('rankCard'),
+  rankTierIcon: document.getElementById('rankTierIcon'),
+  rankTierName: document.getElementById('rankTierName'),
+  rankRR: document.getElementById('rankRR'),
+  rankProgressFill: document.getElementById('rankProgressFill'),
   valVP: document.getElementById('valVP'),
   valRP: document.getElementById('valRP'),
   valKC: document.getElementById('valKC'),
@@ -403,6 +408,17 @@ function renderStoreData(store) {
     DOM.userRegion.textContent = `${store.player.region?.toUpperCase()} // ${store.mode === 'demo' ? 'DEMO' : 'LIVE'}`;
     DOM.userAvatar.textContent = store.player.gameName.slice(0, 2).toUpperCase();
     DOM.metaRegion.textContent = store.player.region?.toUpperCase();
+  }
+
+  // Render Rank and RR
+  if (store.rank) {
+    if (DOM.rankTierName) DOM.rankTierName.textContent = store.rank.tierName || 'UNRANKED';
+    if (DOM.rankRR) DOM.rankRR.textContent = `${store.rank.rankedRating ?? 0} RR`;
+    if (DOM.rankTierIcon && store.rank.largeIcon) DOM.rankTierIcon.src = store.rank.largeIcon;
+    if (DOM.rankProgressFill) {
+      const pct = Math.min(100, Math.max(0, store.rank.rankedRating || 0));
+      DOM.rankProgressFill.style.width = `${pct}%`;
+    }
   }
 
   renderDailyOffers(store.dailyOffers?.items || []);
