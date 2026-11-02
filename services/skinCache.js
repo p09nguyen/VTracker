@@ -12,6 +12,7 @@ class SkinCache {
     this.bundles = new Map();
     this.accessories = new Map();
     this.competitiveTiers = new Map();
+    this.seasons = [];
     this.searchList = [];
     this.isReady = false;
     this.lastUpdated = null;
@@ -24,6 +25,7 @@ class SkinCache {
       await Promise.all([
         this.fetchTiers(),
         this.fetchCompetitiveTiers(),
+        this.fetchSeasons(),
         this.fetchSkins(),
         this.fetchBundles(),
         this.fetchAccessories()
@@ -31,7 +33,7 @@ class SkinCache {
       this.buildSearchIndex();
       this.isReady = true;
       this.lastUpdated = new Date();
-      console.log(`[SkinCache] Cache ready! Indexed ${this.skins.size} skins, ${this.skinLevels.size} levels, ${this.accessories.size} accessories, ${this.competitiveTiers.size} rank tiers.`);
+      console.log(`[SkinCache] Cache ready! Indexed ${this.skins.size} skins, ${this.skinLevels.size} levels, ${this.accessories.size} accessories, ${this.competitiveTiers.size} rank tiers, ${this.seasons.length} acts.`);
     } catch (err) {
       console.error('[SkinCache] Failed to initialize cache:', err.message);
     }
@@ -99,17 +101,47 @@ class SkinCache {
 
   resolveCompetitiveTier(tierNumber) {
     const num = Number(tierNumber) || 0;
+    if (num <= 2) {
+      return {
+        tier: 0,
+        tierName: 'UNRANKED',
+        divisionName: 'UNRANKED',
+        color: '#94a3b8',
+        largeIcon: 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/0/largeicon.png',
+        smallIcon: 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/0/smallicon.png'
+      };
+    }
     if (this.competitiveTiers.has(num)) {
       return this.competitiveTiers.get(num);
     }
     return {
       tier: num,
-      tierName: num === 0 ? 'UNRANKED' : `TIER ${num}`,
-      divisionName: 'UNRANKED',
+      tierName: `TIER ${num}`,
+      divisionName: 'RANKED',
       color: '#94a3b8',
       largeIcon: 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/0/largeicon.png',
       smallIcon: 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/0/smallicon.png'
     };
+  }
+
+  async fetchSeasons() {
+    try {
+      const res = await fetch('https://valorant-api.com/v1/seasons');
+      const json = await res.json();
+      if (json.data && Array.isArray(json.data)) {
+        this.seasons = json.data
+          .filter(s => s.type === 'EAresSeasonType::Act')
+          .sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
+        console.log(`[SkinCache] Loaded ${this.seasons.length} seasons/acts. Current/Latest act: ${this.seasons[0]?.displayName} (${this.seasons[0]?.uuid})`);
+      }
+    } catch (e) {
+      console.error('[SkinCache] Error loading seasons:', e.message);
+    }
+  }
+
+  getCurrentAct() {
+    const now = new Date();
+    return this.seasons.find(s => new Date(s.startTime) <= now && now <= new Date(s.endTime)) || this.seasons[0] || null;
   }
 
   async fetchSkins() {

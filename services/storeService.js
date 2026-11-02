@@ -72,7 +72,8 @@ class StoreService {
       tierName: 'UNRANKED',
       rankedRating: 0,
       largeIcon: 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/0/largeicon.png',
-      color: '#94a3b8'
+      color: '#94a3b8',
+      actName: ''
     };
     try {
       const mmrUrl = `https://pd.${region}.a.pvp.net/mmr/v1/players/${puuid}`;
@@ -82,21 +83,42 @@ class StoreService {
       });
       if (mmrRes.ok) {
         const mmrJson = await mmrRes.json();
+        const compQueue = mmrJson.QueueSkills?.competitive;
+        const seasonalMap = compQueue?.SeasonalInfoBySeasonID || {};
+        const currentAct = skinCache.getCurrentAct();
+        const currentSeasonId = currentAct?.uuid;
+
         let tierNumber = 0;
         let rr = 0;
+        let actName = currentAct?.displayName || '';
 
-        if (mmrJson.LatestCompetitiveUpdate) {
-          tierNumber = mmrJson.LatestCompetitiveUpdate.TierAfterUpdate ?? 0;
-          rr = mmrJson.LatestCompetitiveUpdate.RankedRatingAfterUpdate ?? 0;
+        // Strategy 1: Check Current Act in SeasonalInfoBySeasonID
+        if (currentSeasonId && seasonalMap[currentSeasonId]) {
+          const currentSeasonInfo = seasonalMap[currentSeasonId];
+          if (currentSeasonInfo.CompetitiveTier && currentSeasonInfo.CompetitiveTier > 0) {
+            tierNumber = currentSeasonInfo.CompetitiveTier;
+            rr = currentSeasonInfo.RankedRating ?? 0;
+            actName = currentAct?.displayName || '';
+          }
         }
 
-        const compQueue = mmrJson.QueueSkills?.competitive;
-        if (compQueue?.SeasonalInfoBySeasonID) {
-          const seasonEntries = Object.values(compQueue.SeasonalInfoBySeasonID);
-          for (const s of seasonEntries) {
-            if (s.CompetitiveTier && s.CompetitiveTier > 0) {
-              tierNumber = s.CompetitiveTier;
-              rr = s.RankedRating ?? rr;
+        // Strategy 2: If current act is not yet placed, check LatestCompetitiveUpdate
+        if (tierNumber === 0 && mmrJson.LatestCompetitiveUpdate && mmrJson.LatestCompetitiveUpdate.TierAfterUpdate > 0) {
+          tierNumber = mmrJson.LatestCompetitiveUpdate.TierAfterUpdate;
+          rr = mmrJson.LatestCompetitiveUpdate.RankedRatingAfterUpdate ?? 0;
+          const matchAct = skinCache.seasons.find(s => s.uuid === mmrJson.LatestCompetitiveUpdate.SeasonID);
+          if (matchAct) actName = matchAct.displayName;
+        }
+
+        // Strategy 3: Walk backwards chronologically through Acts from newest to oldest
+        if (tierNumber === 0 && skinCache.seasons && skinCache.seasons.length > 0) {
+          for (const act of skinCache.seasons) {
+            const sInfo = seasonalMap[act.uuid];
+            if (sInfo && sInfo.CompetitiveTier && sInfo.CompetitiveTier > 0) {
+              tierNumber = sInfo.CompetitiveTier;
+              rr = sInfo.RankedRating ?? 0;
+              actName = act.displayName;
+              break; // Found the most recent season the player placed in!
             }
           }
         }
@@ -107,8 +129,19 @@ class StoreService {
           tierName: tierInfo.tierName,
           rankedRating: rr,
           largeIcon: tierInfo.largeIcon,
-          color: tierInfo.color
+          color: tierInfo.color,
+          actName
         };
+
+        console.log(`[StoreService] MMR resolved for player ${puuid}:`, {
+          tierNumber,
+          tierName: tierInfo.tierName,
+          rr,
+          actName
+        });
+      } else {
+        const errText = await mmrRes.text();
+        console.warn(`[StoreService] MMR request failed (status ${mmrRes.status}):`, errText);
       }
     } catch (e) {
       console.warn('[StoreService] Could not fetch MMR:', e.message);

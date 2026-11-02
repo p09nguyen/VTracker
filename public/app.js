@@ -412,11 +412,19 @@ function renderStoreData(store) {
 
   // Render Rank and RR
   if (store.rank) {
-    if (DOM.rankTierName) DOM.rankTierName.textContent = store.rank.tierName || 'UNRANKED';
-    if (DOM.rankRR) DOM.rankRR.textContent = `${store.rank.rankedRating ?? 0} RR`;
-    if (DOM.rankTierIcon && store.rank.largeIcon) DOM.rankTierIcon.src = store.rank.largeIcon;
+    const isUnranked = !store.rank.tier || store.rank.tier <= 2;
+    if (DOM.rankTierName) {
+      DOM.rankTierName.textContent = isUnranked ? 'UNRANKED' : store.rank.tierName;
+    }
+    if (DOM.rankRR) {
+      DOM.rankRR.textContent = isUnranked ? 'Chưa xếp hạng' : `${store.rank.rankedRating ?? 0} RR`;
+    }
+    if (DOM.rankTierIcon && store.rank.largeIcon) {
+      DOM.rankTierIcon.src = store.rank.largeIcon;
+      DOM.rankTierIcon.alt = store.rank.tierName || 'Rank Tier';
+    }
     if (DOM.rankProgressFill) {
-      const pct = Math.min(100, Math.max(0, store.rank.rankedRating || 0));
+      const pct = isUnranked ? 0 : Math.min(100, Math.max(0, store.rank.rankedRating || 0));
       DOM.rankProgressFill.style.width = `${pct}%`;
     }
   }
