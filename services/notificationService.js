@@ -118,7 +118,10 @@ class NotificationService {
       url: '/'
     };
 
-    return await webpush.sendNotification(subscription, JSON.stringify(payload));
+    return await webpush.sendNotification(subscription, JSON.stringify(payload), {
+      TTL: 60,
+      urgency: 'high'
+    });
   }
 
   /**
@@ -183,7 +186,10 @@ class NotificationService {
           url: '/'
         };
 
-        await webpush.sendNotification(record.subscription, JSON.stringify(payload));
+        await webpush.sendNotification(record.subscription, JSON.stringify(payload), {
+          TTL: 86400,
+          urgency: 'high'
+        });
         console.log(`[NotificationService] Sent notification to device successfully.`);
       } catch (err) {
         console.error(`[NotificationService] Failed to notify device:`, err.message);

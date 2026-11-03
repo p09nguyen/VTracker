@@ -23,3 +23,4 @@ if %errorlevel% neq 0 (
     echo Có lỗi xảy ra trong quá trình lấy SSID.
     pause
 )
+

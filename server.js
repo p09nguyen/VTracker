@@ -277,9 +277,17 @@ app.post('/api/push/subscribe', (req, res) => {
 
 app.post('/api/push/test', async (req, res) => {
   try {
-    const { subscription } = req.body;
+    const { subscription, delaySeconds = 0 } = req.body;
     if (!subscription) {
       return res.json({ success: false, message: 'Thiếu thông tin subscription để test.' });
+    }
+    if (delaySeconds > 0) {
+      setTimeout(() => {
+        notificationService.sendTestPush(subscription).catch(err => {
+          console.error('[Delayed test push failed]:', err.message);
+        });
+      }, delaySeconds * 1000);
+      return res.json({ success: true, delayed: true, delaySeconds });
     }
     await notificationService.sendTestPush(subscription);
     res.json({ success: true });

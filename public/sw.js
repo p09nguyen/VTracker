@@ -1,5 +1,5 @@
 // Service Worker for VTracker PWA with Web Push Notifications
-const CACHE_NAME = 'vtracker-v1';
+const CACHE_NAME = 'vtracker-v2';
 
 self.addEventListener('install', (e) => {
   self.skipWaiting();
@@ -34,18 +34,29 @@ self.addEventListener('push', (event) => {
     body: data.body || 'Cửa hàng hôm nay đã cập nhật skin mới!',
     icon: data.icon || '/icon-192.png',
     badge: data.badge || '/icon-192.png',
-    vibrate: [250, 100, 250, 100, 250],
     data: {
       url: data.url || '/'
-    },
-    actions: [
-      { action: 'open', title: 'Mở xem ngay' },
-      { action: 'close', title: 'Đóng' }
-    ]
+    }
   };
 
+  // Feature detection: Only add vibrate & actions if supported (avoids iOS WebKit strict rejection)
+  if ('vibrate' in navigator) {
+    options.vibrate = [200, 100, 200];
+  }
+  if ('actions' in Notification.prototype) {
+    options.actions = [
+      { action: 'open', title: 'Mở xem ngay' },
+      { action: 'close', title: 'Đóng' }
+    ];
+  }
+
   event.waitUntil(
-    self.registration.showNotification(title, options)
+    self.registration.showNotification(title, options).catch((err) => {
+      console.warn('[SW Push fallback]:', err);
+      return self.registration.showNotification(title, {
+        body: data.body || 'Cửa hàng hôm nay đã cập nhật skin mới!'
+      });
+    })
   );
 });
 
