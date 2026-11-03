@@ -230,7 +230,7 @@ class RiotAuth {
    * Automatically refreshes access_token in background whenever it expires!
    */
   async loginWithCookie(cookieOrSsid, region = 'ap') {
-    let cookie = cookieOrSsid.trim();
+    let cookie = (cookieOrSsid || '').replace(/[\r\n]+/g, ' ').trim();
     if (!cookie.includes('=')) {
       cookie = `ssid=${cookie};`;
     } else if (!cookie.includes('ssid=')) {
