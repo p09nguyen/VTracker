@@ -150,6 +150,7 @@ class RiotAuth {
       country,
       accessToken,
       entitlementsToken,
+      tokenIssuedAt: Date.now(),
       lastUpdated: new Date().toISOString()
     };
   }
@@ -219,6 +220,7 @@ class RiotAuth {
       country,
       accessToken,
       entitlementsToken,
+      tokenIssuedAt: Date.now(),
       lastUpdated: new Date().toISOString()
     };
   }

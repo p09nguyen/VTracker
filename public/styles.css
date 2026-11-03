@@ -518,6 +518,77 @@ body {
 }
 .btn-close-alert:hover { color: #fff; }
 
+/* ================= SESSION EXPIRED BANNER ================= */
+.session-expired-banner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 14px;
+  padding: 12px 20px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.55);
+  border-radius: var(--radius-md);
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);
+  animation: fadeIn 0.3s ease;
+}
+
+.expired-icon {
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.expired-content {
+  flex: 1;
+}
+
+.expired-title {
+  font-family: var(--font-heading);
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: #fca5a5;
+  letter-spacing: 0.8px;
+}
+
+.expired-desc {
+  font-size: 0.84rem;
+  color: #f1f5f9;
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
+.btn-renew-token {
+  background: var(--val-red);
+  color: #fff;
+  border: none;
+  padding: 8px 18px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-heading);
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: var(--transition);
+}
+
+.btn-renew-token:hover {
+  background: #fff;
+  color: var(--val-red);
+  box-shadow: 0 0 15px rgba(255, 70, 85, 0.5);
+}
+
+.btn-close-expired {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.btn-close-expired:hover {
+  color: #fff;
+}
+
 /* ================= NAVIGATION TABS ================= */
 .app-nav {
   display: flex;
@@ -2444,6 +2515,16 @@ body {
   }
   .bundle-name {
     font-size: 2rem;
+  }
+  .session-expired-banner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 12px 14px;
+  }
+  .btn-renew-token {
+    width: 100%;
+    text-align: center;
   }
 }
 

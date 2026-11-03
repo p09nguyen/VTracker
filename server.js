@@ -45,6 +45,18 @@ function getLocalIp() {
 // ================= API ROUTES =================
 
 /**
+ * Lightweight Health-check endpoint for 24/7 Keep-Alive (UptimeRobot / Cron-job.org)
+ */
+app.get(['/health', '/api/health'], (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    uptime: Math.floor(process.uptime()),
+    timestamp: new Date().toISOString(),
+    service: 'VTracker'
+  });
+});
+
+/**
  * Health & Status check
  */
 app.get('/api/status', (req, res) => {
@@ -195,7 +207,12 @@ app.post('/api/store', async (req, res) => {
     res.json(storeData);
   } catch (err) {
     console.error('[API /api/store error]:', err.message);
-    res.json({ success: false, message: err.message });
+    const isExpired = err.message.includes('hết hạn') || err.message.includes('Status 400') || err.message.includes('Status 401');
+    res.json({
+      success: false,
+      sessionExpired: isExpired,
+      message: err.message
+    });
   }
 });
 

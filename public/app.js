@@ -47,6 +47,10 @@ const DOM = {
   btnPushNotify: document.getElementById('btnPushNotify'),
   pushNotifyText: document.getElementById('pushNotifyText'),
   loadingState: document.getElementById('loadingState'),
+  sessionExpiredBanner: document.getElementById('sessionExpiredBanner'),
+  sessionExpiredDesc: document.getElementById('sessionExpiredDesc'),
+  btnRenewToken: document.getElementById('btnRenewToken'),
+  btnCloseExpired: document.getElementById('btnCloseExpired'),
   
   // Tabs & Sections
   tabs: document.querySelectorAll('.nav-tab'),
@@ -174,11 +178,14 @@ function saveWishlist() {
 function saveAuth(auth) {
   state.auth = auth;
   if (auth) {
+    auth.savedAt = Date.now();
     localStorage.setItem('vtracker_auth', JSON.stringify(auth));
     updateUserUI(auth);
+    showSessionExpiredBanner(false);
   } else {
     localStorage.removeItem('vtracker_auth');
     resetUserUI();
+    showSessionExpiredBanner(false);
   }
 }
 
@@ -382,14 +389,21 @@ async function loadStore(demo = false) {
 
     state.storeData = data;
     renderStoreData(data);
+    showSessionExpiredBanner(false);
     startCountdown(data.dailyOffers.endsAt || data.dailyOffers.remainingSeconds);
     checkWishlistInStore();
   } catch (err) {
     console.warn('Failed to load store:', err);
     if (!demo) {
-      // Fallback to demo mode if live session expired
+      // Live session expired or failed
       state.isDemoMode = true;
       updateDemoButtonState();
+      showSessionExpiredBanner(true, err.message || 'Phiên đăng nhập Riot của bạn đã hết hạn (Token 1 giờ). Vui lòng bấm Lấy Token mới để xem cửa hàng hôm nay.');
+      if (state.auth) {
+        DOM.userRegion.textContent = `${state.auth.region?.toUpperCase()} // HẾT HẠN TOKEN`;
+        DOM.userRegion.style.color = '#fb7185';
+        DOM.btnLoginModal.querySelector('.btn-text').textContent = 'Đăng nhập lại';
+      }
       loadStore(true);
     }
   } finally {
@@ -1050,6 +1064,14 @@ function bindEvents() {
   // Push Notification Toggle Button
   DOM.btnPushNotify?.addEventListener('click', handlePushNotificationToggle);
 
+  // Session Expired Banner actions
+  DOM.btnRenewToken?.addEventListener('click', () => {
+    openLoginModal();
+  });
+  DOM.btnCloseExpired?.addEventListener('click', () => {
+    showSessionExpiredBanner(false);
+  });
+
   // Login Modal
   DOM.btnLoginModal.addEventListener('click', () => {
     if (state.auth) {
@@ -1218,6 +1240,14 @@ function showError(msg) {
 
 function showLoading(show) {
   DOM.loadingState.style.display = show ? 'flex' : 'none';
+}
+
+function showSessionExpiredBanner(show, msg = '') {
+  if (!DOM.sessionExpiredBanner) return;
+  DOM.sessionExpiredBanner.style.display = show ? 'flex' : 'none';
+  if (show && msg && DOM.sessionExpiredDesc) {
+    DOM.sessionExpiredDesc.textContent = msg;
+  }
 }
 
 function playAudio(el) {

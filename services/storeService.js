@@ -41,6 +41,9 @@ class StoreService {
     if (!storefrontRes.ok) {
       const errText = await storefrontRes.text();
       console.error('[StoreService] Storefront failed:', storefrontRes.status, errText);
+      if (storefrontRes.status === 400 || storefrontRes.status === 401) {
+        throw new Error('Phiên đăng nhập Riot đã hết hạn (Token 1 giờ). Vui lòng đăng nhập lại để cập nhật cửa hàng.');
+      }
       throw new Error(`Không thể lấy dữ liệu cửa hàng từ Riot (Status ${storefrontRes.status}).`);
     }
 

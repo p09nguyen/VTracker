@@ -121,6 +121,17 @@
       <button class="btn-close-alert" id="btnCloseAlert">✕</button>
     </div>
 
+    <!-- Session Expired Alert Banner (When 1-hour Riot Token expires) -->
+    <div class="session-expired-banner" id="sessionExpiredBanner" style="display: none;">
+      <div class="expired-icon">⚠️</div>
+      <div class="expired-content">
+        <div class="expired-title">PHIÊN ĐĂNG NHẬP RIOT ĐÃ HẾT HẠN (TOKEN 1 GIỜ)</div>
+        <div class="expired-desc" id="sessionExpiredDesc">Token truy vấn Riot Games đã hết hạn sau 1 tiếng. Vui lòng bấm nút bên phải để lấy token mới (chỉ mất 5 giây).</div>
+      </div>
+      <button class="btn-renew-token" id="btnRenewToken">Lấy Token mới (5s)</button>
+      <button class="btn-close-expired" id="btnCloseExpired">✕</button>
+    </div>
+
     <!-- Navigation Tabs -->
     <nav class="app-nav">
       <div class="nav-tabs">
