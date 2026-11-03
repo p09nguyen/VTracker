@@ -90,6 +90,7 @@ const DOM = {
   formTokenLogin: document.getElementById('formTokenLogin'),
   inputTokenUrl: document.getElementById('inputTokenUrl'),
   selectTokenRegion: document.getElementById('selectTokenRegion'),
+  btnAutoPasteClipboard: document.getElementById('btnAutoPasteClipboard'),
   btnTokenSubmit: document.getElementById('btnTokenSubmit'),
   formCredentials: document.getElementById('formCredentials'),
   inputUsername: document.getElementById('inputUsername'),
@@ -135,17 +136,20 @@ const DOM = {
 };
 
 // ================= INITIALIZATION =================
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   initStorage();
   bindEvents();
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js').catch(() => {});
     checkPushSubscriptionStatus();
   }
+
+  const hasUrlToken = await checkUrlForToken();
+
   checkServerStatus().then(() => {
     if (state.auth) {
       loadStore(false);
-    } else {
+    } else if (!hasUrlToken) {
       // Load demo view initially so the user immediately sees a functioning store
       state.isDemoMode = true;
       updateDemoButtonState();
@@ -154,6 +158,40 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   loadAllSkinsCatalog();
 });
+
+// Auto-detect Token from URL hash (from Bookmarklet or direct redirect)
+async function checkUrlForToken() {
+  const hash = window.location.hash;
+  if (hash && (hash.includes('access_token=') || hash.includes('id_token='))) {
+    const rawHash = hash.startsWith('#') ? hash.substring(1) : hash;
+    const params = new URLSearchParams(rawHash);
+    const token = params.get('access_token');
+    if (token) {
+      window.history.replaceState(null, document.title, window.location.pathname + window.location.search);
+      showLoading(true);
+      try {
+        const res = await fetch('/api/auth/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token, region: state.auth?.region || 'ap' })
+        });
+        const data = await res.json();
+        if (data.success) {
+          saveAuth(data.auth);
+          state.isDemoMode = false;
+          updateDemoButtonState();
+          await loadStore(false);
+          return true;
+        }
+      } catch (e) {
+        console.warn('Auto token login from hash failed:', e);
+      } finally {
+        showLoading(false);
+      }
+    }
+  }
+  return false;
+}
 
 // Load persistent storage
 function initStorage() {
@@ -254,6 +292,27 @@ async function handleTokenLogin(e) {
   } finally {
     DOM.btnTokenSubmit.disabled = false;
     DOM.btnTokenSubmit.textContent = 'XÁC NHẬN & TẢI CỬA HÀNG CỦA BẠN';
+  }
+}
+
+// 1b. 1-Tap Auto-Paste from Clipboard
+async function handleAutoPasteClipboard() {
+  showError('');
+  try {
+    if (!navigator.clipboard || !navigator.clipboard.readText) {
+      alert('Trình duyệt của bạn không hỗ trợ đọc tự động clipboard. Bạn vui lòng ấn giữ vào ô nhập và chọn Dán (Paste).');
+      return;
+    }
+    const text = await navigator.clipboard.readText();
+    if (!text || (!text.includes('access_token=') && !text.includes('opt_in') && text.length < 40)) {
+      showError('Chưa tìm thấy link đăng nhập trong bộ nhớ tạm. Hãy copy link trên trang Riot rồi quay lại bấm nút này nhé!');
+      return;
+    }
+    DOM.inputTokenUrl.value = text.trim();
+    DOM.formTokenLogin.dispatchEvent(new Event('submit'));
+  } catch (err) {
+    console.warn('Clipboard read error:', err);
+    showError('Cần cấp quyền truy cập bộ nhớ tạm. Hoặc bạn có thể chạm giữ vào ô bên dưới và chọn Dán (Paste).');
   }
 }
 
@@ -1154,6 +1213,7 @@ function bindEvents() {
   });
   
   // Submit handlers
+  DOM.btnAutoPasteClipboard?.addEventListener('click', handleAutoPasteClipboard);
   DOM.formTokenLogin.addEventListener('submit', handleTokenLogin);
   DOM.formCookieLogin?.addEventListener('submit', handleCookieLogin);
   DOM.btnAutoLogin.addEventListener('click', () => handleAutoLogin(false));

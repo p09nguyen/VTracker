@@ -382,7 +382,12 @@
 
         <form id="formTokenLogin" class="auth-form">
           <div class="form-group">
-            <label for="inputTokenUrl">DÁN ĐƯỜNG LINK (URL) HOẶC ACCESS TOKEN VÀO ĐÂY</label>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <label for="inputTokenUrl" style="margin-bottom: 0;">DÁN ĐƯỜNG LINK HOẶC TOKEN VÀO ĐÂY</label>
+              <button type="button" id="btnAutoPasteClipboard" style="padding: 4px 10px; background: rgba(255, 70, 85, 0.2); border: 1px solid var(--val-red); color: #fff; border-radius: 4px; font-size: 0.8rem; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+                📋 1-Chạm Tự Dán
+              </button>
+            </div>
             <input type="text" id="inputTokenUrl" placeholder="https://playvalorant.com/opt_in#access_token=ey... hoặc dán token..." required autocomplete="off">
           </div>
 
