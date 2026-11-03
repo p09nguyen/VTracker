@@ -125,14 +125,7 @@ const DOM = {
 
   // Audio FX
   audioFlip: document.getElementById('audioFlip'),
-  audioAlert: document.getElementById('audioAlert'),
-
-  // Mobile / iPhone Modal
-  btnOpenMobileModal: document.getElementById('btnOpenMobileModal'),
-  mobileModal: document.getElementById('mobileModal'),
-  btnCloseMobileModal: document.getElementById('btnCloseMobileModal'),
-  mobileQrImg: document.getElementById('mobileQrImg'),
-  mobileUrlDisplay: document.getElementById('mobileUrlDisplay')
+  audioAlert: document.getElementById('audioAlert')
 };
 
 // ================= INITIALIZATION =================
@@ -1193,24 +1186,6 @@ function bindEvents() {
   });
 
   DOM.btnCloseLoginModal.addEventListener('click', closeLoginModal);
-  
-  // Mobile / iPhone Connect Modal
-  DOM.btnOpenMobileModal?.addEventListener('click', async () => {
-    try {
-      DOM.mobileModal.style.display = 'flex';
-      const res = await fetch('/api/connect-mobile');
-      const data = await res.json();
-      if (data.success) {
-        DOM.mobileQrImg.src = data.qrDataUrl;
-        DOM.mobileUrlDisplay.textContent = data.url;
-      }
-    } catch(e) {
-      console.warn('Error loading mobile QR:', e);
-    }
-  });
-  DOM.btnCloseMobileModal?.addEventListener('click', () => {
-    DOM.mobileModal.style.display = 'none';
-  });
   
   // Submit handlers
   DOM.btnAutoPasteClipboard?.addEventListener('click', handleAutoPasteClipboard);
