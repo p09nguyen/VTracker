@@ -4,6 +4,7 @@
  */
 
 const skinCache = require('./skinCache');
+const riotAuth = require('./riotAuth');
 
 const VP_CURRENCY_ID = '85ad13f7-3d1b-5128-9eb2-7cd8ee0b5741';
 const KC_CURRENCY_ID = '85ca954a-41f2-ce94-9b45-8ca3dd39a00d';
@@ -22,9 +23,25 @@ class StoreService {
     const clientVersion = skinCache.clientVersion;
     const clientPlatform = 'ew0KCSJwbGF0Zm9ybVR5cGUiOiAiUEMiLA0KCSJwbGF0Zm9ybU9TIjogIldpbmRvd3MiLA0KCSJwbGF0Zm9ybU9TVmVyc2lvbiI6ICIxMC4wLjE5MDQyLjEuMjU2LjY0Yml0IiwNCgkicGxhdGZvcm1DaGlwc2V0IjogIlVua25vd24iDQp9';
 
+    // Auto-refresh token if auth has cookie and token is older than 50 minutes
+    let refreshedAuth = null;
+    if (auth.cookie && (Date.now() - (auth.tokenIssuedAt || 0) > 3000 * 1000)) {
+      try {
+        console.log('[StoreService] Token > 50 mins old. Auto-refreshing with saved ssid cookie...');
+        const refreshed = await riotAuth.loginWithCookie(auth.cookie, auth.region);
+        auth.accessToken = refreshed.accessToken;
+        auth.entitlementsToken = refreshed.entitlementsToken;
+        auth.tokenIssuedAt = Date.now();
+        refreshedAuth = { ...auth };
+        console.log('[StoreService] Auto-refresh token success!');
+      } catch (e) {
+        console.warn('[StoreService] Auto-refresh token failed:', e.message);
+      }
+    }
+
     const commonHeaders = {
-      'Authorization': 'Bearer ' + accessToken,
-      'X-Riot-Entitlements-JWT': entitlementsToken,
+      'Authorization': 'Bearer ' + auth.accessToken,
+      'X-Riot-Entitlements-JWT': auth.entitlementsToken,
       'X-Riot-ClientVersion': clientVersion,
       'X-Riot-ClientPlatform': clientPlatform,
       'Content-Type': 'application/json'
@@ -32,11 +49,32 @@ class StoreService {
 
     // 1. Fetch Storefront V3
     const storefrontUrl = `https://pd.${region}.a.pvp.net/store/v3/storefront/${puuid}`;
-    const storefrontRes = await fetch(storefrontUrl, {
+    let storefrontRes = await fetch(storefrontUrl, {
       method: 'POST',
       headers: commonHeaders,
       body: '{}'
     });
+
+    // Auto-retry with cookie if token expired
+    if (!storefrontRes.ok && (storefrontRes.status === 400 || storefrontRes.status === 401) && auth.cookie) {
+      console.log('[StoreService] Storefront 400/401. Auto-refreshing with saved cookie...');
+      try {
+        const refreshed = await riotAuth.loginWithCookie(auth.cookie, auth.region);
+        auth.accessToken = refreshed.accessToken;
+        auth.entitlementsToken = refreshed.entitlementsToken;
+        auth.tokenIssuedAt = Date.now();
+        refreshedAuth = { ...auth };
+        commonHeaders['Authorization'] = 'Bearer ' + auth.accessToken;
+        commonHeaders['X-Riot-Entitlements-JWT'] = auth.entitlementsToken;
+        storefrontRes = await fetch(storefrontUrl, {
+          method: 'POST',
+          headers: commonHeaders,
+          body: '{}'
+        });
+      } catch (e) {
+        console.warn('[StoreService] Retry with cookie failed:', e.message);
+      }
+    }
 
     if (!storefrontRes.ok) {
       const errText = await storefrontRes.text();
@@ -159,6 +197,7 @@ class StoreService {
     return {
       success: true,
       mode: 'live',
+      refreshedAuth: refreshedAuth || undefined,
       player: {
         gameName: auth.gameName || 'Agent',
         tagLine: auth.tagLine || 'VAL',

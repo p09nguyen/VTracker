@@ -133,6 +133,23 @@ app.post('/api/auth/token', async (req, res) => {
 });
 
 /**
+ * Cookie (ssid) Login (Persistent 7-30 days session with auto-refresh)
+ */
+app.post('/api/auth/cookie', async (req, res) => {
+  try {
+    const { cookie, region = 'ap' } = req.body;
+    if (!cookie) {
+      return res.json({ success: false, message: 'Vui lòng nhập cookie hoặc mã ssid của tài khoản Riot.' });
+    }
+    const authData = await riotAuth.loginWithCookie(cookie, region);
+    currentActiveSession = authData;
+    res.json({ success: true, auth: authData });
+  } catch (err) {
+    res.json({ success: false, message: err.message });
+  }
+});
+
+/**
  * Username / Password Login (RSO)
  */
 app.post('/api/auth/login', async (req, res) => {
@@ -204,6 +221,9 @@ app.post('/api/store', async (req, res) => {
     }
 
     const storeData = await storeService.fetchLiveStore(activeAuth);
+    if (storeData.refreshedAuth) {
+      currentActiveSession = storeData.refreshedAuth;
+    }
     res.json(storeData);
   } catch (err) {
     console.error('[API /api/store error]:', err.message);

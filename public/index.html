@@ -341,11 +341,15 @@
       <!-- Auth Method Tabs -->
       <div class="modal-tabs">
         <button class="modal-tab active" data-authtab="token">
-          <span>🌐 Riot Web (Khuyên dùng)</span>
+          <span>🌐 Riot Web (Nhanh 3s)</span>
           <span class="badge-recommended">100% OK</span>
         </button>
+        <button class="modal-tab" data-authtab="cookie">
+          <span>🍪 Cookie SSID</span>
+          <span class="badge-recommended" style="background: rgba(34, 197, 94, 0.2); color: #4ade80;">30 ngày</span>
+        </button>
         <button class="modal-tab" data-authtab="lockfile">
-          <span>⚡ Riot Client trên máy</span>
+          <span>⚡ Riot Client máy tính</span>
         </button>
         <button class="modal-tab" data-authtab="credentials">
           <span>🔑 Tài khoản Riot</span>
@@ -394,6 +398,62 @@
 
           <button type="submit" class="btn-primary-action btn-full" id="btnTokenSubmit">
             <span>XÁC NHẬN & TẢI CỬA HÀNG CỦA BẠN</span>
+          </button>
+        </form>
+      </div>
+
+      <!-- TAB 2: COOKIE SSID LOGIN (PERSISTENT 30 DAYS - NO 1-HOUR EXPIRY) -->
+      <div class="auth-tab-content" id="authTabCookie" style="display: none;">
+        <div class="lockfile-guide-box">
+          <div class="guide-item">
+            <div class="guide-num">★</div>
+            <div>
+              <strong>Giải pháp không bị giới hạn 1 giờ:</strong> Sử dụng Cookie <code>ssid</code> của Riot Games để VTracker tự động gia hạn phiên đăng nhập liên tục suốt <strong>7 - 30 ngày</strong> trong nền mà bạn không cần đăng nhập lại!
+            </div>
+          </div>
+          <div class="guide-item">
+            <div class="guide-num">1</div>
+            <div>
+              Đăng nhập tài khoản của bạn trên trang web chính thức của Riot: 
+              <div style="margin-top: 6px;">
+                <a href="https://auth.riotgames.com/authorize?client_id=play-valorant-web-prod&response_type=token%20id_token&redirect_uri=https%3A%2F%2Fplayvalorant.com%2Fopt_in&scope=account%20openid&nonce=1" target="_blank" class="btn-primary-action" style="display: inline-flex; padding: 6px 14px; font-size: 0.85rem; text-decoration: none;">
+                  🔗 Mở trang Riot Games (Tab mới)
+                </a>
+              </div>
+            </div>
+          </div>
+          <div class="guide-item">
+            <div class="guide-num">2</div>
+            <div>
+              Trên trình duyệt (Chrome/Edge/Cốc Cốc), nhấn phím <strong>F12</strong> (hoặc Chuột phải ➔ <em>Kiểm tra / Inspect</em>) ➔ Chọn tab <strong>Application</strong> (Ứng dụng) ➔ Menu bên trái chọn <strong>Cookies</strong> ➔ <code>https://auth.riotgames.com</code>.
+            </div>
+          </div>
+          <div class="guide-item">
+            <div class="guide-num">3</div>
+            <div>
+              Tìm dòng cookie có tên là <strong>ssid</strong>, nhấp đúp vào cột <strong>Value</strong> và copy toàn bộ giá trị đó dán vào ô bên dưới:
+            </div>
+          </div>
+        </div>
+
+        <form id="formCookieLogin" class="auth-form">
+          <div class="form-group">
+            <label for="inputCookieValue">MÃ COOKIE SSID (HOẶC TOÀN BỘ CHUỖI COOKIE)</label>
+            <textarea id="inputCookieValue" rows="3" placeholder="Dán mã ssid (Ví dụ: eyJraWQiOiJmZWRy... hoặc ssid=...) vào đây" required autocomplete="off" style="width: 100%; padding: 10px; background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); font-family: monospace; font-size: 0.85rem; resize: vertical;"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="selectCookieRegion">MÁY CHỦ / KHU VỰC</label>
+            <select id="selectCookieRegion">
+              <option value="ap" selected>AP - Châu Á Thái Bình Dương / Việt Nam (ap)</option>
+              <option value="na">NA - Bắc Mỹ (na)</option>
+              <option value="eu">EU - Châu Âu (eu)</option>
+              <option value="kr">KR - Hàn Quốc (kr)</option>
+            </select>
+          </div>
+
+          <button type="submit" class="btn-primary-action btn-full" id="btnCookieSubmit">
+            <span>XÁC NHẬN & DUY TRÌ ĐĂNG NHẬP 30 NGÀY</span>
           </button>
         </form>
       </div>

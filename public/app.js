@@ -78,8 +78,13 @@ const DOM = {
   btnCloseLoginModal: document.getElementById('btnCloseLoginModal'),
   modalTabs: document.querySelectorAll('.modal-tab'),
   authTabToken: document.getElementById('authTabToken'),
+  authTabCookie: document.getElementById('authTabCookie'),
   authTabLockfile: document.getElementById('authTabLockfile'),
   authTabCredentials: document.getElementById('authTabCredentials'),
+  formCookieLogin: document.getElementById('formCookieLogin'),
+  inputCookieValue: document.getElementById('inputCookieValue'),
+  selectCookieRegion: document.getElementById('selectCookieRegion'),
+  btnCookieSubmit: document.getElementById('btnCookieSubmit'),
   detectStatus: document.getElementById('detectStatus'),
   btnAutoLogin: document.getElementById('btnAutoLogin'),
   formTokenLogin: document.getElementById('formTokenLogin'),
@@ -252,6 +257,44 @@ async function handleTokenLogin(e) {
   }
 }
 
+// 2. Cookie (ssid) Login (Persistent 7-30 days)
+async function handleCookieLogin(e) {
+  e.preventDefault();
+  showError('');
+  const cookieVal = DOM.inputCookieValue.value.trim();
+  const region = DOM.selectCookieRegion.value;
+
+  if (!cookieVal) return;
+
+  DOM.btnCookieSubmit.disabled = true;
+  DOM.btnCookieSubmit.textContent = 'ĐANG XÁC THỰC COOKIE...';
+
+  try {
+    const res = await fetch('/api/auth/cookie', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cookie: cookieVal, region })
+    });
+    const data = await res.json();
+
+    if (!data.success) {
+      showError(data.message || 'Xác thực cookie thất bại.');
+      return;
+    }
+
+    saveAuth(data.auth);
+    state.isDemoMode = false;
+    updateDemoButtonState();
+    closeLoginModal();
+    await loadStore(false);
+  } catch (err) {
+    showError(err.message);
+  } finally {
+    DOM.btnCookieSubmit.disabled = false;
+    DOM.btnCookieSubmit.textContent = 'XÁC NHẬN & DUY TRÌ ĐĂNG NHẬP 30 NGÀY';
+  }
+}
+
 // 2. Lockfile Auto Login
 async function handleAutoLogin(silent = false) {
   showError('');
@@ -385,6 +428,12 @@ async function loadStore(demo = false) {
     const data = await res.json();
     if (!data.success) {
       throw new Error(data.message || 'Không thể tải dữ liệu cửa hàng.');
+    }
+
+    // Auto-update storage if token was refreshed via cookie in background
+    if (data.refreshedAuth) {
+      console.log('[Auth] Token automatically refreshed via cookie in background!');
+      saveAuth(data.refreshedAuth);
     }
 
     state.storeData = data;
@@ -1043,6 +1092,7 @@ function bindEvents() {
       const target = mt.dataset.authtab;
       
       DOM.authTabToken.style.display = target === 'token' ? 'block' : 'none';
+      if (DOM.authTabCookie) DOM.authTabCookie.style.display = target === 'cookie' ? 'block' : 'none';
       DOM.authTabLockfile.style.display = target === 'lockfile' ? 'block' : 'none';
       DOM.authTabCredentials.style.display = target === 'credentials' ? 'block' : 'none';
       showError('');
@@ -1105,6 +1155,7 @@ function bindEvents() {
   
   // Submit handlers
   DOM.formTokenLogin.addEventListener('submit', handleTokenLogin);
+  DOM.formCookieLogin?.addEventListener('submit', handleCookieLogin);
   DOM.btnAutoLogin.addEventListener('click', () => handleAutoLogin(false));
   DOM.formCredentials.addEventListener('submit', handleCredentialsLogin);
   DOM.formMfa.addEventListener('submit', handleMfaSubmit);

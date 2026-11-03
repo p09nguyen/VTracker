@@ -226,6 +226,55 @@ class RiotAuth {
   }
 
   /**
+   * Long-lived Cookie (ssid) Login (Valid for 7 - 30 days)
+   * Automatically refreshes access_token in background whenever it expires!
+   */
+  async loginWithCookie(cookieOrSsid, region = 'ap') {
+    let cookie = cookieOrSsid.trim();
+    if (!cookie.includes('=')) {
+      cookie = `ssid=${cookie};`;
+    } else if (!cookie.includes('ssid=')) {
+      cookie = `ssid=${cookie}; ${cookie}`;
+    }
+
+    const authRes = await fetch('https://auth.riotgames.com/api/v1/authorization', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Cookie': cookie,
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+      },
+      body: JSON.stringify({
+        client_id: 'play-valorant-web-prod',
+        nonce: Date.now().toString(),
+        redirect_uri: 'https://playvalorant.com/opt_in',
+        response_type: 'token id_token',
+        scope: 'account openid'
+      })
+    });
+
+    const data = await authRes.json();
+    if (data.type === 'response' && data.response?.parameters?.uri) {
+      const uri = data.response.parameters.uri;
+      const hash = uri.includes('#') ? uri.split('#')[1] : '';
+      const params = new URLSearchParams(hash);
+      const accessToken = params.get('access_token');
+      if (accessToken) {
+        const tokenAuth = await this.loginWithToken(accessToken, region);
+        return {
+          ...tokenAuth,
+          authMethod: 'cookie',
+          cookie,
+          tokenIssuedAt: Date.now(),
+          lastUpdated: new Date().toISOString()
+        };
+      }
+    }
+
+    throw new Error('Cookie ssid không hợp lệ hoặc đã hết hạn trên máy chủ Riot Games. Vui lòng lấy cookie mới.');
+  }
+
+  /**
    * Log in with Riot Games Username & Password (RSO Flow)
    */
   async loginWithCredentials(username, password, region = 'ap') {
