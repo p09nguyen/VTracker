@@ -51,7 +51,7 @@ const DOM = {
   sessionExpiredDesc: document.getElementById('sessionExpiredDesc'),
   btnRenewToken: document.getElementById('btnRenewToken'),
   btnCloseExpired: document.getElementById('btnCloseExpired'),
-  
+
   // Tabs & Sections
   tabs: document.querySelectorAll('.nav-tab'),
   sections: document.querySelectorAll('.tab-section'),
@@ -133,7 +133,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   initStorage();
   bindEvents();
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js').catch(() => {});
+    navigator.serviceWorker.register('/sw.js').catch(() => { });
     checkPushSubscriptionStatus();
   }
 
@@ -233,20 +233,30 @@ async function checkServerStatus() {
     state.status = data;
 
     if (data.riotClientRunning) {
-      DOM.riotClientBadge.className = 'riot-client-status-badge online';
-      DOM.riotClientBadge.innerHTML = `<span class="status-dot"></span><span>Riot Client: Đang mở (Sẵn sàng)</span>`;
-      DOM.detectStatus.textContent = 'Đã phát hiện Riot Client đang chạy trên máy tính!';
-      DOM.detectStatus.style.color = 'var(--rad-cyan)';
+      if (DOM.riotClientBadge) {
+        DOM.riotClientBadge.className = 'riot-client-status-badge online';
+        DOM.riotClientBadge.innerHTML = `<span class="status-dot"></span><span>Riot Client: Đang mở (Sẵn sàng)</span>`;
+      }
+      if (DOM.detectStatus) {
+        DOM.detectStatus.textContent = 'Đã phát hiện Riot Client đang chạy trên máy tính!';
+        DOM.detectStatus.style.color = 'var(--rad-cyan)';
+      }
     } else {
-      DOM.riotClientBadge.className = 'riot-client-status-badge offline';
-      DOM.riotClientBadge.innerHTML = `<span class="status-dot"></span><span>Riot Client: Chưa mở</span>`;
-      DOM.detectStatus.textContent = 'Riot Client chưa chạy hoặc chưa đăng nhập. Vui lòng mở game hoặc dùng tab Riot Web.';
-      DOM.detectStatus.style.color = '#fb7185';
+      if (DOM.riotClientBadge) {
+        DOM.riotClientBadge.className = 'riot-client-status-badge offline';
+        DOM.riotClientBadge.innerHTML = `<span class="status-dot"></span><span>Riot Client: Chưa mở</span>`;
+      }
+      if (DOM.detectStatus) {
+        DOM.detectStatus.textContent = 'Riot Client chưa chạy hoặc chưa đăng nhập. Vui lòng mở game hoặc dùng tab Riot Web.';
+        DOM.detectStatus.style.color = '#fb7185';
+      }
     }
   } catch (e) {
     console.error('Server status check failed:', e);
-    DOM.riotClientBadge.className = 'riot-client-status-badge offline';
-    DOM.riotClientBadge.innerHTML = `<span class="status-dot"></span><span>Mất kết nối máy chủ</span>`;
+    if (DOM.riotClientBadge) {
+      DOM.riotClientBadge.className = 'riot-client-status-badge offline';
+      DOM.riotClientBadge.innerHTML = `<span class="status-dot"></span><span>Mất kết nối máy chủ</span>`;
+    }
   }
 }
 
@@ -947,14 +957,14 @@ function toggleWishlist(uuid) {
 
 function updateWishlistCounters() {
   const c = state.wishlist.size;
-  DOM.wishlistCount.textContent = c;
-  DOM.wlCountDisplay.textContent = c;
-  DOM.savedWishlistCount.textContent = c;
+  if (DOM.wishlistCount) DOM.wishlistCount.textContent = c;
+  if (DOM.wlCountDisplay) DOM.wlCountDisplay.textContent = c;
+  if (DOM.savedWishlistCount) DOM.savedWishlistCount.textContent = c;
 }
 
 // Real-time Wishlist Alert Detection
 function checkWishlistInStore() {
-  if (!state.storeData) return;
+  if (!state.storeData || !DOM.wishlistAlertBanner) return;
   const dailyItems = state.storeData.dailyOffers?.items || [];
   const nmItems = state.storeData.nightMarket?.items || [];
 
@@ -972,7 +982,9 @@ function checkWishlistInStore() {
 
   if (matched.length > 0) {
     DOM.wishlistAlertBanner.style.display = 'flex';
-    DOM.wishlistAlertDesc.innerHTML = `Vật phẩm mơ ước của bạn: <strong>${matched.join(', ')}</strong> đang có mặt trong cửa hàng hôm nay!`;
+    if (DOM.wishlistAlertDesc) {
+      DOM.wishlistAlertDesc.innerHTML = `Vật phẩm mơ ước của bạn: <strong>${matched.join(', ')}</strong> đang có mặt trong cửa hàng hôm nay!`;
+    }
     playAudio(DOM.audioAlert);
   } else {
     DOM.wishlistAlertBanner.style.display = 'none';
@@ -1110,7 +1122,7 @@ function showPhotoStage() {
 function showVideoStage() {
   DOM.stageRenderWrapper.style.display = 'none';
   DOM.stageVideoWrapper.style.display = 'block';
-  DOM.modalSkinVideo.play().catch(() => {});
+  DOM.modalSkinVideo.play().catch(() => { });
   DOM.btnShowVideo.classList.add('active');
   DOM.btnShowPhoto.classList.remove('active');
 }
@@ -1142,7 +1154,7 @@ function bindEvents() {
       DOM.modalTabs.forEach(t => t.classList.remove('active'));
       mt.classList.add('active');
       const target = mt.dataset.authtab;
-      
+
       DOM.authTabToken.style.display = target === 'token' ? 'block' : 'none';
       if (DOM.authTabCookie) DOM.authTabCookie.style.display = target === 'cookie' ? 'block' : 'none';
       DOM.authTabLockfile.style.display = target === 'lockfile' ? 'block' : 'none';
@@ -1152,7 +1164,7 @@ function bindEvents() {
   });
 
   // Demo Mode Toggle
-  DOM.btnDemoToggle.addEventListener('click', () => {
+  DOM.btnDemoToggle?.addEventListener('click', () => {
     state.isDemoMode = !state.isDemoMode;
     updateDemoButtonState();
     loadStore(state.isDemoMode);
@@ -1186,7 +1198,7 @@ function bindEvents() {
   });
 
   DOM.btnCloseLoginModal.addEventListener('click', closeLoginModal);
-  
+
   // Submit handlers
   DOM.btnAutoPasteClipboard?.addEventListener('click', handleAutoPasteClipboard);
   DOM.formTokenLogin.addEventListener('submit', handleTokenLogin);
@@ -1240,12 +1252,12 @@ function bindEvents() {
   });
 
   // Wishlist Banner actions
-  DOM.btnScrollToShop.addEventListener('click', () => {
+  DOM.btnScrollToShop?.addEventListener('click', () => {
     switchTab('daily');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
-  DOM.btnCloseAlert.addEventListener('click', () => {
-    DOM.wishlistAlertBanner.style.display = 'none';
+  DOM.btnCloseAlert?.addEventListener('click', () => {
+    if (DOM.wishlistAlertBanner) DOM.wishlistAlertBanner.style.display = 'none';
   });
 }
 
@@ -1284,7 +1296,7 @@ function filterCatalog() {
 }
 
 function updateDemoButtonState() {
-  DOM.btnDemoToggle.classList.toggle('active', state.isDemoMode);
+  DOM.btnDemoToggle?.classList.toggle('active', state.isDemoMode);
 }
 
 function updateUserUI(auth) {
@@ -1340,9 +1352,9 @@ function playAudio(el) {
   try {
     if (el) {
       el.currentTime = 0;
-      el.play().catch(() => {});
+      el.play().catch(() => { });
     }
-  } catch (e) {}
+  } catch (e) { }
 }
 
 // ================= WEB PUSH NOTIFICATIONS (IPHONE / ANDROID / DESKTOP) =================
@@ -1411,7 +1423,7 @@ async function handlePushNotificationToggle() {
       }
       return;
     }
-  } catch (e) {}
+  } catch (e) { }
 
   try {
     const permission = await Notification.requestPermission();
