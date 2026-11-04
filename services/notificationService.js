@@ -41,7 +41,7 @@ class NotificationService {
     }
 
     webpush.setVapidDetails(
-      'mailto:vtracker@valorant.local',
+      'mailto:vtracker.app@gmail.com',
       this.publicKey,
       this.privateKey
     );
@@ -118,10 +118,13 @@ class NotificationService {
       url: '/'
     };
 
-    return await webpush.sendNotification(subscription, JSON.stringify(payload), {
+    console.log('[NotificationService] Sending push notification to endpoint:', subscription.endpoint ? subscription.endpoint.slice(0, 60) + '...' : 'unknown');
+    const result = await webpush.sendNotification(subscription, JSON.stringify(payload), {
       TTL: 60,
       urgency: 'high'
     });
+    console.log('[NotificationService] Push delivery response statusCode:', result?.statusCode);
+    return result;
   }
 
   /**

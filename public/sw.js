@@ -1,5 +1,5 @@
 // Service Worker for VTracker PWA with Web Push Notifications
-const CACHE_NAME = 'vtracker-v2';
+const CACHE_NAME = 'vtracker-v3';
 
 self.addEventListener('install', (e) => {
   self.skipWaiting();
@@ -30,10 +30,12 @@ self.addEventListener('push', (event) => {
   }
 
   const title = data.title || '🎯 Valorant Shop Reset (07:00 AM)';
+  const iconUrl = new URL('/icon-192.png', self.location.origin).href;
+
   const options = {
     body: data.body || 'Cửa hàng hôm nay đã cập nhật skin mới!',
-    icon: data.icon || '/icon-192.png',
-    badge: data.badge || '/icon-192.png',
+    icon: iconUrl,
+    badge: iconUrl,
     data: {
       url: data.url || '/'
     }

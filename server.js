@@ -284,15 +284,20 @@ app.post('/api/push/test', async (req, res) => {
     if (delaySeconds > 0) {
       setTimeout(() => {
         notificationService.sendTestPush(subscription).catch(err => {
-          console.error('[Delayed test push failed]:', err.message);
+          console.error('[Delayed test push failed]:', err.statusCode, err.body || err.message);
         });
       }, delaySeconds * 1000);
       return res.json({ success: true, delayed: true, delaySeconds });
     }
-    await notificationService.sendTestPush(subscription);
-    res.json({ success: true });
+    const result = await notificationService.sendTestPush(subscription);
+    res.json({ success: true, statusCode: result?.statusCode });
   } catch (err) {
-    res.json({ success: false, message: err.message });
+    console.error('[API /api/push/test error]:', err.statusCode, err.body || err.message);
+    res.json({ 
+      success: false, 
+      statusCode: err.statusCode,
+      message: err.body ? `${err.message}: ${err.body}` : err.message 
+    });
   }
 });
 

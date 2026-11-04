@@ -1390,19 +1390,24 @@ async function handlePushNotificationToggle() {
     return;
   }
 
-  // If already subscribed, offer to test notification with a 3-second delay
+  // If already subscribed, offer to test notification
   try {
     const reg = await navigator.serviceWorker.ready;
     const existingSub = await reg.pushManager.getSubscription();
     if (existingSub && DOM.btnPushNotify.classList.contains('subscribed')) {
-      const doTest = confirm('Thông báo 7:00 sáng của bạn đang HOẠT ĐỘNG!\n\nBạn có muốn gửi một thông báo thử nghiệm sau 3 giây không? (Bấm OK rồi KHÓA MÀN HÌNH iPhone hoặc gạt về Home để thấy thông báo nổ chuông)');
-      if (doTest) {
-        await fetch('/api/push/test', {
+      const choice = confirm('Thông báo 7:00 sáng đã được bật trên máy này!\n\nBạn có muốn gửi một thông báo thử nghiệm sau 3 giây không?\n(Bấm OK rồi BẤM NÚT NGUỒN KHÓA MÀN HÌNH iPhone lại để nghe chuông)');
+      if (choice) {
+        const testRes = await fetch('/api/push/test', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ subscription: existingSub, delaySeconds: 3 })
         });
-        alert('Đã gửi thông báo sau 3 giây! Bạn hãy KHÓA MÀN HÌNH iPhone ngay bây giờ nhé!');
+        const testData = await testRes.json();
+        if (!testData.success) {
+          alert('❌ Lỗi gửi thông báo từ máy chủ: ' + (testData.message || 'Không rõ nguyên nhân'));
+          return;
+        }
+        alert('⚡ Đã hẹn giờ! Hãy BẤM NÚT NGUỒN KHÓA MÀN HÌNH iPhone ngay bây giờ nhé!');
       }
       return;
     }
@@ -1455,11 +1460,15 @@ async function handlePushNotificationToggle() {
     DOM.btnPushNotify.title = 'Thông báo đang hoạt động lúc 07:00 sáng mỗi ngày!';
 
     // 4. Send test push notification with 3s delay so user can lock screen
-    await fetch('/api/push/test', {
+    const testRes = await fetch('/api/push/test', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ subscription: sub, delaySeconds: 3 })
     });
+    const testData = await testRes.json();
+    if (!testData.success) {
+      throw new Error(testData.message || 'Lỗi gửi thông báo thử nghiệm từ máy chủ.');
+    }
 
     alert('🎉 ĐÃ BẬT THÔNG BÁO ĐẨY 07:00 SÁNG THÀNH CÔNG!\n\n💡 LƯU Ý QUAN TRỌNG TRÊN IPHONE:\niOS KHÔNG hiện biểu ngữ khi bạn đang mở sẵn màn hình app này.\n\n👉 Hãy bấm OK rồi KHÓA MÀN HÌNH iPhone lại (hoặc gạt về Home), sau 3 giây thông báo sẽ nổ chuông và hiện trên Màn hình khóa!');
   } catch (err) {
