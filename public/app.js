@@ -574,35 +574,37 @@ function renderDailyOffers(items) {
     const isWished = state.wishlist.has(skin.uuid);
     const tierColor = skin.tier?.color || '#94a3b8';
     const card = document.createElement('div');
-    card.className = `skin-card ${isWished ? 'in-wishlist' : ''}`;
+    card.className = `skin-card daily-skin-card ${isWished ? 'in-wishlist' : ''}`;
     card.style.setProperty('--tier-color', tierColor);
     card.style.setProperty('--tier-glow', `${tierColor}44`);
+    card.style.setProperty('--tier-glow-strong', `${tierColor}88`);
 
     card.innerHTML = `
-      <div class="card-header">
-        <div class="tier-badge">
-          ${skin.tier?.icon ? `<img src="${skin.tier.icon}" class="tier-icon-img" alt="${skin.tier.name}">` : ''}
-          <span>${skin.tier?.name || 'Standard'}</span>
-        </div>
-        <button class="btn-card-wishlist ${isWished ? 'active' : ''}" data-uuid="${skin.uuid}" title="${isWished ? 'Bỏ theo dõi' : 'Thêm vào Wishlist'}">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="${isWished ? '#ff4655' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-        </button>
-      </div>
+      <button class="btn-card-wishlist ${isWished ? 'active' : ''}" data-uuid="${skin.uuid}" title="${isWished ? 'Bỏ theo dõi' : 'Thêm vào Wishlist'}">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="${isWished ? '#ff4655' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+      </button>
+      ${skin.streamedVideo ? `<div class="has-video-badge" title="Có video hiệu ứng"><span class="play-icon"></span><span>VFX</span></div>` : ''}
 
       <div class="card-visual">
         <div class="card-bg-gradient"></div>
-        <img src="${skin.displayIcon || ''}" alt="${skin.displayName}" class="weapon-img">
-        ${skin.streamedVideo ? `<div class="has-video-badge"><span class="play-icon"></span><span>VFX Video</span></div>` : ''}
+        <div class="card-watermark">
+          <svg viewBox="0 0 300 180" preserveAspectRatio="none">
+            <path d="M60 0 L25 180 L55 180 L90 0 Z" fill="currentColor" />
+            <path d="M105 0 L70 180 L100 180 L135 0 Z" fill="currentColor" />
+          </svg>
+        </div>
+        <img src="${skin.displayIcon || ''}" alt="${skin.displayName}" class="weapon-img" loading="lazy">
       </div>
 
-      <div class="card-info">
-        <h3 class="skin-title">${skin.displayName}</h3>
-        <div class="card-footer">
-          <div class="price-display">
-            <span class="curr-icon vp-icon"></span>
-            <span>${(skin.cost || 0).toLocaleString()}</span>
-          </div>
-          <button class="btn-inspect" data-uuid="${skin.uuid}">Chi tiết</button>
+      <div class="card-bottom-bar">
+        <span class="skin-title" title="${skin.displayName}">${skin.displayName}</span>
+        <div class="price-display">
+          <svg class="vp-ingame-svg" viewBox="0 0 100 100" aria-label="Valorant Points">
+            <circle cx="50" cy="50" r="44" fill="none" stroke="currentColor" stroke-width="8"/>
+            <polygon points="28,26 49,68 40,68 21,26" fill="currentColor"/>
+            <polygon points="72,26 51,68 60,68 79,26" fill="currentColor"/>
+          </svg>
+          <span class="price-num">${(skin.cost || 0).toLocaleString()}</span>
         </div>
       </div>
     `;
@@ -612,9 +614,13 @@ function renderDailyOffers(items) {
       toggleWishlist(skin.uuid);
     });
 
-    card.querySelector('.btn-inspect').addEventListener('click', () => {
-      openSkinModal(skin);
-    });
+    const inspectBtn = card.querySelector('.btn-inspect');
+    if (inspectBtn) {
+      inspectBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openSkinModal(skin);
+      });
+    }
 
     card.addEventListener('click', () => {
       openSkinModal(skin);
