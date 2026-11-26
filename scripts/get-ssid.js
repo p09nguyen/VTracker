@@ -202,7 +202,7 @@ async function main() {
       output: process.stdout
     });
 
-    rl.question('🌐 Bạn có muốn tự động gửi mã SSID này lên web Render của bạn không?\n   (Dán link web Render ví dụ: https://vtracker-xxxx.onrender.com hoặc ấn Enter để hoàn tất): ', async (answer) => {
+    rl.question('🌐 Bạn có muốn tự động gửi chuỗi cookie này lên web Render của bạn không?\n   (Dán link web Render ví dụ: https://vtracker-xxxx.onrender.com hoặc ấn Enter để hoàn tất): ', async (answer) => {
       const targetUrl = answer.trim().replace(/\/+$/, '');
       if (targetUrl && (targetUrl.startsWith('http://') || targetUrl.startsWith('https://'))) {
         console.log(`\nĐang đồng bộ trực tiếp lên: ${targetUrl}...`);
@@ -215,8 +215,8 @@ async function main() {
           const syncData = await syncRes.json();
           if (syncData.success) {
             console.log(`✅ ĐỒNG BỘ THÀNH CÔNG!`);
-            console.log(`   Tài khoản: ${syncData.auth?.gameName} #${syncData.auth?.tagLine}`);
-            console.log(`   Từ nay trang web Render của bạn sẽ tự động chạy liên tục suốt 30 ngày!`);
+          console.log(`   Tài khoản: ${syncData.auth?.gameName} #${syncData.auth?.tagLine}`);
+          console.log(`   Web Render đã nhận cookie để tự làm mới phiên đăng nhập.`);
           } else {
             console.log(`❌ Đồng bộ thất bại: ${syncData.message}`);
           }
