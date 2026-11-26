@@ -145,6 +145,7 @@ app.post('/api/auth/cookie', async (req, res) => {
     currentActiveSession = authData;
     res.json({ success: true, auth: authData });
   } catch (err) {
+    console.warn('[Auth][Cookie] Login failed:', err.message);
     res.json({ success: false, message: err.message });
   }
 });

@@ -253,14 +253,34 @@ class RiotAuth {
       })
     });
 
-    const data = await authRes.json();
+    let data;
+    try {
+      data = await authRes.json();
+    } catch (err) {
+      console.warn('[RiotAuth][Cookie] Riot returned a non-JSON response.', {
+        status: authRes.status,
+        contentType: authRes.headers.get('content-type') || 'unknown'
+      });
+      throw new Error(`Riot trả phản hồi không đọc được (HTTP ${authRes.status}).`);
+    }
+
     if (data.type === 'response' && data.response?.parameters?.uri) {
       const uri = data.response.parameters.uri;
       const hash = uri.includes('#') ? uri.split('#')[1] : '';
       const params = new URLSearchParams(hash);
       const accessToken = params.get('access_token');
       if (accessToken) {
-        const tokenAuth = await this.loginWithToken(accessToken, region);
+        let tokenAuth;
+        try {
+          tokenAuth = await this.loginWithToken(accessToken, region);
+        } catch (err) {
+          console.warn('[RiotAuth][Cookie] Riot accepted the cookie but token exchange failed.', {
+            status: authRes.status,
+            responseType: data.type,
+            error: err.message
+          });
+          throw err;
+        }
         return {
           ...tokenAuth,
           authMethod: 'cookie',
@@ -270,6 +290,16 @@ class RiotAuth {
         };
       }
     }
+
+    console.warn('[RiotAuth][Cookie] Riot did not issue an access token.', {
+      status: authRes.status,
+      responseType: data.type || 'unknown',
+      responseError: typeof data.error === 'string' ? data.error : undefined,
+      hasResponseUri: Boolean(data.response?.parameters?.uri),
+      responseKeys: data.response && typeof data.response === 'object'
+        ? Object.keys(data.response)
+        : []
+    });
 
     throw new Error('Cookie ssid không hợp lệ hoặc đã hết hạn trên máy chủ Riot Games. Vui lòng lấy cookie mới.');
   }
