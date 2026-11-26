@@ -147,11 +147,7 @@ async function main() {
     if (ws.readyState === WebSocket.OPEN) {
       try {
         const cookiesRes = await sendCdp('Network.getCookies', {
-          urls: [
-            'https://auth.riotgames.com',
-            'https://authenticate.riotgames.com',
-            'https://playvalorant.com'
-          ]
+          urls: ['https://auth.riotgames.com']
         });
 
         if (cookiesRes && cookiesRes.cookies) {
@@ -159,7 +155,8 @@ async function main() {
           if (ssidCookie && ssidCookie.value) {
             foundSsid = ssidCookie.value;
 
-            // Also build full cookie string
+            // Send all cookies scoped to auth.riotgames.com; Riot may need
+            // session cookies alongside ssid when authorizing from a server.
             fullCookieString = cookiesRes.cookies
               .map(c => `${c.name}=${c.value}`)
               .join('; ');
@@ -180,16 +177,16 @@ async function main() {
     console.log('\n----------------------------------------------------------------');
 
     // Copy to clipboard
-    const copied = copyToClipboard(foundSsid);
+    const copied = copyToClipboard(fullCookieString || `ssid=${foundSsid}`);
     if (copied) {
-      console.log('📋 ĐÃ TỰ ĐỘNG SAO CHÉP MÃ SSID VÀO BỘ NHỚ TẠM (CLIPBOARD)!');
-      console.log('   Bạn chỉ cần mở VTracker trên máy hoặc điện thoại và ấn Dán (Ctrl + V).');
+      console.log('📋 ĐÃ SAO CHÉP CHUỖI COOKIE RIOT VÀO CLIPBOARD.');
+      console.log('   Dán nguyên chuỗi này vào ô Cookie SSID của VTracker.');
     }
 
     // Save to backup file
     const backupFile = path.join(__dirname, '..', 'vtracker_ssid.txt');
-    fs.writeFileSync(backupFile, foundSsid, 'utf8');
-    console.log(`💾 Đã lưu dự phòng vào file: ${path.basename(backupFile)}`);
+    fs.writeFileSync(backupFile, fullCookieString || `ssid=${foundSsid}`, 'utf8');
+    console.log(`💾 Đã lưu chuỗi cookie dự phòng vào file: ${path.basename(backupFile)}`);
     console.log('----------------------------------------------------------------\n');
 
     // Close browser cleanly
@@ -213,7 +210,7 @@ async function main() {
           const syncRes = await fetch(`${targetUrl}/api/auth/cookie`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ cookie: foundSsid, region: 'ap' })
+            body: JSON.stringify({ cookie: fullCookieString || `ssid=${foundSsid}`, region: 'ap' })
           });
           const syncData = await syncRes.json();
           if (syncData.success) {
