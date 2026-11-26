@@ -1,0 +1,206 @@
+/* Required sign-in gate: quiet the demo shell and present a macOS-style window. */
+body.auth-required {
+  overflow: hidden;
+}
+
+body.auth-required .app-layout {
+  filter: blur(8px);
+  opacity: 0.28;
+  pointer-events: none;
+  user-select: none;
+  transition: filter 0.25s ease, opacity 0.25s ease;
+}
+
+#loginModal[data-required="true"] {
+  z-index: 2000;
+  background: rgba(8, 10, 14, 0.68);
+  backdrop-filter: blur(22px) saturate(135%);
+  -webkit-backdrop-filter: blur(22px) saturate(135%);
+}
+
+#loginModal[data-required="true"] .login-modal-card {
+  width: min(880px, 100%);
+  max-width: 880px;
+  max-height: min(90vh, 900px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 22px;
+  background: rgba(28, 28, 30, 0.96);
+  box-shadow: 0 32px 100px rgba(0, 0, 0, 0.62), 0 1px 0 rgba(255, 255, 255, 0.08) inset;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+  overflow: hidden;
+}
+
+#loginModal[data-required="true"] .modal-header {
+  min-height: 82px;
+  padding: 18px 24px;
+  gap: 18px;
+  border-bottom-color: rgba(255, 255, 255, 0.09);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent);
+}
+
+.mac-window-controls {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.mac-window-controls span {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #ff5f57;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.18) inset;
+}
+
+.mac-window-controls span:nth-child(2) { background: #febc2e; }
+.mac-window-controls span:nth-child(3) { background: #28c840; }
+
+#loginModal[data-required="true"] .mac-window-controls {
+  display: flex;
+}
+
+#loginModal[data-required="true"] .modal-title-group {
+  flex: 1;
+  justify-content: center;
+  margin-right: 58px;
+}
+
+#loginModal[data-required="true"] .modal-icon-badge {
+  border-radius: 12px;
+  background: rgba(255, 70, 85, 0.14);
+}
+
+#loginModal[data-required="true"] .modal-title {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+  font-size: 1.2rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+#loginModal[data-required="true"] .modal-subtitle {
+  margin-top: 4px;
+  font-size: 0.9rem;
+}
+
+#loginModal[data-required="true"] #btnCloseLoginModal {
+  display: none;
+}
+
+#loginModal[data-required="true"] .modal-tabs {
+  margin: 18px 24px 0;
+  padding: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  background: rgba(118, 118, 128, 0.16);
+  gap: 3px;
+}
+
+#loginModal[data-required="true"] .modal-tab {
+  padding: 11px 10px;
+  border: 0;
+  border-radius: 9px;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+  font-size: 0.86rem;
+  letter-spacing: 0;
+}
+
+#loginModal[data-required="true"] .modal-tab.active {
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+#loginModal[data-required="true"] .auth-tab-content {
+  padding: 22px 28px 28px;
+}
+
+#loginModal[data-required="true"] .lockfile-guide-box {
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+#loginModal[data-required="true"] .guide-num {
+  border-radius: 7px;
+  background: rgba(10, 132, 255, 0.92);
+}
+
+#loginModal[data-required="true"] .form-group input,
+#loginModal[data-required="true"] .form-group select,
+#loginModal[data-required="true"] #inputCookieValue {
+  min-height: 48px;
+  border-radius: 10px;
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(118, 118, 128, 0.16);
+}
+
+#loginModal[data-required="true"] .form-group input:focus,
+#loginModal[data-required="true"] .form-group select:focus,
+#loginModal[data-required="true"] #inputCookieValue:focus {
+  border-color: #0a84ff;
+  box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.2);
+}
+
+#loginModal[data-required="true"] .btn-primary-action {
+  min-height: 50px;
+  border-radius: 11px;
+  background: #0a84ff;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+  font-size: 0.98rem;
+  letter-spacing: 0;
+}
+
+#loginModal[data-required="true"] .btn-primary-action:hover {
+  background: #2997ff;
+  box-shadow: 0 8px 24px rgba(10, 132, 255, 0.25);
+}
+
+@media (max-width: 600px) {
+  #loginModal[data-required="true"] {
+    padding: max(8px, env(safe-area-inset-top, 8px)) 8px max(8px, env(safe-area-inset-bottom, 8px));
+  }
+
+  #loginModal[data-required="true"] .login-modal-card {
+    max-height: 94dvh;
+    border-radius: 18px;
+  }
+
+  #loginModal[data-required="true"] .modal-header {
+    min-height: 72px;
+    padding: 14px 16px;
+    gap: 12px;
+  }
+
+  #loginModal[data-required="true"] .modal-title-group {
+    justify-content: flex-start;
+    margin-right: 0;
+  }
+
+  #loginModal[data-required="true"] .modal-title {
+    font-size: 1.02rem;
+  }
+
+  #loginModal[data-required="true"] .modal-subtitle {
+    font-size: 0.78rem;
+  }
+
+  #loginModal[data-required="true"] .modal-tabs {
+    margin: 12px 12px 0;
+    overflow-x: auto;
+  }
+
+  #loginModal[data-required="true"] .modal-tab {
+    min-width: max-content;
+    flex: 1 0 auto;
+    padding: 9px 10px;
+    font-size: 0.77rem;
+  }
+
+  #loginModal[data-required="true"] .badge-recommended {
+    display: none;
+  }
+
+  #loginModal[data-required="true"] .auth-tab-content {
+    padding: 16px;
+  }
+}
+

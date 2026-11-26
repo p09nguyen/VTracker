@@ -143,10 +143,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (state.auth) {
       loadStore(false);
     } else if (!hasUrlToken) {
-      // Load demo view initially so the user immediately sees a functioning store
-      state.isDemoMode = true;
+      state.isDemoMode = false;
       updateDemoButtonState();
-      loadStore(true);
+      AuthGate.requireLogin();
     }
   });
   loadAllSkinsCatalog();
@@ -218,10 +217,12 @@ function saveAuth(auth) {
     localStorage.setItem('vtracker_auth', JSON.stringify(auth));
     updateUserUI(auth);
     showSessionExpiredBanner(false);
+    AuthGate.release();
   } else {
     localStorage.removeItem('vtracker_auth');
     resetUserUI();
     showSessionExpiredBanner(false);
+    AuthGate.requireLogin();
   }
 }
 
@@ -469,9 +470,9 @@ async function handleMfaSubmit(e) {
 
 function handleLogout() {
   saveAuth(null);
-  state.isDemoMode = true;
+  state.isDemoMode = false;
   updateDemoButtonState();
-  loadStore(true);
+  openLoginModal();
 }
 
 // ================= STORE DATA LOADING =================
@@ -506,8 +507,8 @@ async function loadStore(demo = false) {
   } catch (err) {
     console.warn('Failed to load store:', err);
     if (!demo) {
-      // Live session expired or failed
-      state.isDemoMode = true;
+      // Require a fresh login instead of displaying demo data.
+      state.isDemoMode = false;
       updateDemoButtonState();
       showSessionExpiredBanner(true, err.message || 'Phiên đăng nhập Riot của bạn đã hết hạn (Token 1 giờ). Vui lòng bấm Lấy Token mới để xem cửa hàng hôm nay.');
       if (state.auth) {
@@ -515,7 +516,7 @@ async function loadStore(demo = false) {
         DOM.userRegion.style.color = '#fb7185';
         DOM.btnLoginModal.querySelector('.btn-text').textContent = 'Đăng nhập lại';
       }
-      loadStore(true);
+      AuthGate.requireLogin();
     }
   } finally {
     showLoading(false);
@@ -1314,7 +1315,7 @@ function updateUserUI(auth) {
 
 function resetUserUI() {
   DOM.userName.textContent = 'Chưa đăng nhập';
-  DOM.userRegion.textContent = 'DEMO // CHẾ ĐỘ THỬ';
+  DOM.userRegion.textContent = 'ĐĂNG NHẬP ĐỂ TIẾP TỤC';
   DOM.userAvatar.textContent = 'VA';
   DOM.btnLoginModal.querySelector('.btn-text').textContent = 'Đăng nhập';
 }
@@ -1325,10 +1326,18 @@ function openLoginModal() {
   if (authLink) {
     authLink.href = `https://auth.riotgames.com/authorize?client_id=play-valorant-web-prod&response_type=token%20id_token&redirect_uri=https%3A%2F%2Fplayvalorant.com%2Fopt_in&scope=account%20openid&nonce=${Date.now()}`;
   }
-  DOM.loginModal.style.display = 'flex';
+  if (!state.auth) {
+    AuthGate.requireLogin();
+  } else {
+    DOM.loginModal.style.display = 'flex';
+  }
 }
 
 function closeLoginModal() {
+  if (!state.auth) {
+    AuthGate.requireLogin();
+    return;
+  }
   DOM.loginModal.style.display = 'none';
   showError('');
 }
