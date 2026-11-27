@@ -1373,134 +1373,16 @@ function playAudio(el) {
 }
 
 // ================= WEB PUSH NOTIFICATIONS (IPHONE / ANDROID / DESKTOP) =================
-function urlBase64ToUint8Array(base64String) {
-  const padding = '='.repeat((4 - base64String.length % 4) % 4);
-  const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
-  const rawData = window.atob(base64);
-  const outputArray = new Uint8Array(rawData.length);
-  for (let i = 0; i < rawData.length; ++i) {
-    outputArray[i] = rawData.charCodeAt(i);
-  }
-  return outputArray;
-}
-
 async function checkPushSubscriptionStatus() {
-  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-    return;
-  }
-
-  try {
-    const reg = await navigator.serviceWorker.ready;
-    const sub = await reg.pushManager.getSubscription();
-    if (sub && Notification.permission === 'granted') {
-      DOM.btnPushNotify.classList.add('subscribed');
-      DOM.pushNotifyText.textContent = 'Đã bật thông báo 7h';
-      DOM.btnPushNotify.title = 'Thông báo đang hoạt động lúc 07:00 sáng mỗi ngày!';
-    }
-  } catch (e) {
-    console.warn('[Push] Error checking subscription:', e);
-  }
+  return PushNotifications.syncOnLoad({
+    auth: state.auth,
+    wishlist: Array.from(state.wishlist)
+  });
 }
 
 async function handlePushNotificationToggle() {
-  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-    alert('Trình duyệt hoặc thiết bị này không hỗ trợ Web Push Notifications.');
-    return;
-  }
-
-  // iOS Safari check: If on iPhone/iPad and not added to Home Screen yet
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-  const isStandalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
-
-  if (isIOS && !isStandalone) {
-    alert('📱 Trên iPhone, bạn cần bấm nút Chia sẻ (Share) -> chọn "Thêm vào Màn hình chính" trước, sau đó mở app từ màn hình chính để bật thông báo đẩy 07:00 sáng!');
-    return;
-  }
-
-  // If already subscribed, offer to test notification
-  try {
-    const reg = await navigator.serviceWorker.ready;
-    const existingSub = await reg.pushManager.getSubscription();
-    if (existingSub && DOM.btnPushNotify.classList.contains('subscribed')) {
-      const choice = confirm('Thông báo 7:00 sáng đã được bật trên máy này!\n\nBạn có muốn gửi một thông báo thử nghiệm sau 3 giây không?\n(Bấm OK rồi BẤM NÚT NGUỒN KHÓA MÀN HÌNH iPhone lại để nghe chuông)');
-      if (choice) {
-        const testRes = await fetch('/api/push/test', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ subscription: existingSub, delaySeconds: 3 })
-        });
-        const testData = await testRes.json();
-        if (!testData.success) {
-          alert('❌ Lỗi gửi thông báo từ máy chủ: ' + (testData.message || 'Không rõ nguyên nhân'));
-          return;
-        }
-        alert('⚡ Đã hẹn giờ! Hãy BẤM NÚT NGUỒN KHÓA MÀN HÌNH iPhone ngay bây giờ nhé!');
-      }
-      return;
-    }
-  } catch (e) { }
-
-  try {
-    const permission = await Notification.requestPermission();
-    if (permission !== 'granted') {
-      alert('Bạn đã từ chối cấp quyền thông báo. Vui lòng cho phép quyền thông báo trong Cài đặt iPhone/Trình duyệt để nhận tin lúc 07:00 sáng.');
-      return;
-    }
-
-    DOM.pushNotifyText.textContent = 'Đang kích hoạt...';
-
-    // 1. Fetch public key
-    const keyRes = await fetch('/api/push/public-key');
-    const keyData = await keyRes.json();
-    if (!keyData.publicKey) {
-      throw new Error('Không thể lấy VAPID Public Key từ máy chủ.');
-    }
-
-    // 2. Subscribe via Service Worker
-    const reg = await navigator.serviceWorker.ready;
-    let sub = await reg.pushManager.getSubscription();
-    if (!sub) {
-      sub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(keyData.publicKey)
-      });
-    }
-
-    // 3. Save subscription on server
-    const saveRes = await fetch('/api/push/subscribe', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        subscription: sub,
-        auth: state.auth,
-        wishlist: Array.from(state.wishlist)
-      })
-    });
-    const saveData = await saveRes.json();
-
-    if (!saveData.success) {
-      throw new Error(saveData.message || 'Lỗi lưu thông tin thiết bị.');
-    }
-
-    DOM.btnPushNotify.classList.add('subscribed');
-    DOM.pushNotifyText.textContent = 'Đã bật thông báo 7h';
-    DOM.btnPushNotify.title = 'Thông báo đang hoạt động lúc 07:00 sáng mỗi ngày!';
-
-    // 4. Send test push notification with 3s delay so user can lock screen
-    const testRes = await fetch('/api/push/test', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ subscription: sub, delaySeconds: 3 })
-    });
-    const testData = await testRes.json();
-    if (!testData.success) {
-      throw new Error(testData.message || 'Lỗi gửi thông báo thử nghiệm từ máy chủ.');
-    }
-
-    alert('🎉 ĐÃ BẬT THÔNG BÁO ĐẨY 07:00 SÁNG THÀNH CÔNG!\n\n💡 LƯU Ý QUAN TRỌNG TRÊN IPHONE:\niOS KHÔNG hiện biểu ngữ khi bạn đang mở sẵn màn hình app này.\n\n👉 Hãy bấm OK rồi KHÓA MÀN HÌNH iPhone lại (hoặc gạt về Home), sau 3 giây thông báo sẽ nổ chuông và hiện trên Màn hình khóa!');
-  } catch (err) {
-    console.error('[Push error]:', err);
-    alert('Không thể kích hoạt thông báo: ' + err.message);
-    DOM.pushNotifyText.textContent = 'Thông báo 7h sáng';
-  }
+  return PushNotifications.handleToggle({
+    auth: state.auth,
+    wishlist: Array.from(state.wishlist)
+  });
 }

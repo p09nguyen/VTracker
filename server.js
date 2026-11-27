@@ -263,17 +263,28 @@ app.get('/api/skins/all', (req, res) => {
 /**
  * Web Push Notification Endpoints (iPhone / Android / Desktop)
  */
-app.get('/api/push/public-key', (req, res) => {
-  res.json({ publicKey: notificationService.publicKey });
+app.get('/api/push/public-key', async (req, res) => {
+  try {
+    await notificationService.ensureReady();
+    res.json({ publicKey: notificationService.publicKey });
+  } catch (err) {
+    console.error('[API /api/push/public-key error]:', err.message);
+    res.status(503).json({ success: false, message: 'Dịch vụ thông báo chưa sẵn sàng.' });
+  }
 });
 
-app.post('/api/push/subscribe', (req, res) => {
-  const { subscription, auth, wishlist } = req.body;
-  if (!subscription) {
-    return res.json({ success: false, message: 'Thiếu thông tin đăng ký subscription.' });
+app.post('/api/push/subscribe', async (req, res) => {
+  try {
+    const { subscription, auth, wishlist } = req.body;
+    if (!subscription) {
+      return res.json({ success: false, message: 'Thiếu thông tin đăng ký subscription.' });
+    }
+    const result = await notificationService.addSubscription(subscription, auth || currentActiveSession, wishlist);
+    res.json(result);
+  } catch (err) {
+    console.error('[API /api/push/subscribe error]:', err.message);
+    res.status(503).json({ success: false, message: 'Không thể lưu đăng ký thông báo. Kiểm tra cấu hình Supabase trên Render.' });
   }
-  const result = notificationService.addSubscription(subscription, auth || currentActiveSession, wishlist);
-  res.json(result);
 });
 
 app.post('/api/push/test', async (req, res) => {
